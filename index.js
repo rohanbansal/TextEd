@@ -110,8 +110,8 @@ app.post('/message', function (req, res) {
         adherenceDates: []
       });
 
-      adherenceRef.child(fromNum).child("adherenceDates").push({
-        abc: "hello"
+      adherenceRef.child(fromNum).child(moment().subtract(4, 'h').format("MMM DD, YYYY")).update({
+        taken: 1;
       })
     }
 
