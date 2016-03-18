@@ -46,7 +46,6 @@ app.get('/', function(request, response) {
 //What Happens when you receive a message
 app.post('/message', function (req, res) {
 
-  //TODO implement 1/0 med aherence functionality
   //TODO implement no response counter
 
   //TODO implement error checking on message contents
@@ -205,6 +204,8 @@ var textJob = new cronJob( '* * * * *', function() {
     usersRef.child(patientID).update({
       nextReminder: reminderTime.format(timeFormat)
     });
+
+
 
     var clientMsg = craftReminderMessage(usersDB[patientID]);
 
