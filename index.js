@@ -111,7 +111,7 @@ app.post('/message', function (req, res) {
       });
 
       adherenceRef.child(fromNum).child(moment().subtract(4, 'h').format("MMM DD, YYYY")).update({
-        taken: 1;
+        taken: 1
       })
     }
 
