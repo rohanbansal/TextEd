@@ -45,17 +45,38 @@ app.get('/', function(request, response) {
 //What Happens when you receive a message
 app.post('/message', function (req, res) {
 
+  //TODO implement 1/0 med aherence functionality
+  //TODO implement no response counter
+
+  //TODO implement error checking on message contents
+  //TODO implement total # of messages sent
+  //TODO implement STOP functionality
+  //TODO implement re-email if hanging registration
+  //TODO implement HELP
+
   var resp = new twilio.TwimlResponse();
   var fromNum = req.body.From;
   var fromMsg = req.body.Body.trim();
+
+
 
   usersRef.once('value', function(snapshot) {
 
     var registeredUser = snapshot.hasChild(fromNum);
 
+    // Unsubscribe functionality
+    if(fromMsg.toLowerCase() === "halt") {
+      resp.message("We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN.");
+      if(registeredUser) {
+        usersRef.child(fromNum).update({
+          donotsend: true
+        });
+      }
+    }
+
     //New User
-    if(!registeredUser) {
-      resp.message('Thank you for subscribing to TextEd! Please send us your preferred name. Reply STOP to cancel.');
+    else if(!registeredUser) {
+      resp.message('Thank you for subscribing to TextEd! Please send us your preferred name. Reply HALT to cancel.');
       // usersRef.push(fromNum);
       usersRef.child(fromNum).set({
         name: null,
@@ -67,14 +88,14 @@ app.post('/message', function (req, res) {
         missedDoseCounter: 0,
         failedTexts: 0,
         totalSent: 1,
-        nextReminder: moment().subtract(4, 'h').add(0, 'd').format("MMM DD, ") + defaultReminderTime,
+        nextReminder: moment().subtract(4, 'h').add(1, 'd').format("MMM DD, ") + defaultReminderTime,
         satisfaction: null,
         donotsend: false,
         registrationComplete: false
       });
     }
 
-    if(registeredUser) {
+    else if(registeredUser) {
 
       if(usersDB[fromNum].name == null) {
         resp.message('Hello ' + fromMsg + "!  How old are you?");
@@ -108,7 +129,7 @@ app.post('/message', function (req, res) {
         resp.message('Thank you - your registration is complete!');
         usersRef.child(fromNum).update({
           registrationComplete: true
-          //nextReminder: fromMsg
+          //nextReminder: fromMsg TODO Add next reminder functionality
         });
       }
 
@@ -154,7 +175,7 @@ var textJob = new cronJob( '* * * * *', function() {
     currentTime.subtract(4, 'h'); //UTC Offset.  TODO: FIX time zone issues.
     //console.log("Loop Current Time: " + currentTime.format(timeFormat));
     //console.log("Reminder Time" + reminderTime.format(timeFormat));
-    if( !(currentTime.isAfter(reminderTime))  || !usersDB[patientID].registrationComplete) {
+    if( !(currentTime.isAfter(reminderTime))  || !usersDB[patientID].registrationComplete || usersDB[patientID].donotsend) {
       console.log("Skipping Reminder!");
       continue;
     }
