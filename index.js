@@ -110,9 +110,9 @@ app.post('/message', function (req, res) {
         adherenceDates: []
       });
 
-      adherenceRef.child(fromNum).child(moment().subtract(4, 'h').format("MMM DD, YYYY")).update({
-        taken: 1
-      })
+      var temp = {};
+      temp[moment().subtract(4, 'h').format("MMM DD, YYYY")] = 1;
+      adherenceRef.child(fromNum).child(moment().subtract(4, 'h').format("MMM DD, YYYY")).update(temp);
     }
 
     else if(existingUser) {
