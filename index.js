@@ -111,7 +111,7 @@ app.post('/message', function (req, res) {
       });
 
       adherenceRef.child(fromNum).child(adherenceDates).push({
-        abc: "hello";
+        abc: "hello"
       })
     }
 
