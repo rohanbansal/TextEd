@@ -79,10 +79,15 @@ app.post('/message', function (req, res) {
     else if( finishedRegistration && ( (fromMsg.toLowerCase() === "0") || (fromMsg.toLowerCase() === "1") ) ) {
       if(fromMsg.toLowerCase() === "1") {
         resp.message("Congratulations on taking your medication - keep it up!");
+        var temp = {};
+        temp[moment().subtract(4, 'h').format("ss MMM DD, YYYY")] = 1;
+        adherenceRef.child(fromNum).update(temp);
       }
       else if(fromMsg.toLowerCase() === "0") {
         resp.message("We're sorry you didn't take your medication - any particular reason why?");
-
+        var temp = {};
+        temp[moment().subtract(4, 'h').format("ss MMM DD, YYYY")] = 0;
+        adherenceRef.child(fromNum).update(temp);
       }
     }
 
@@ -106,13 +111,7 @@ app.post('/message', function (req, res) {
         registrationComplete: false
       });
 
-      adherenceRef.child(fromNum).set({
-        adherenceDates: []
-      });
 
-      var temp = {};
-      temp[moment().subtract(4, 'h').format("MMM DD, YYYY")] = 1;
-      adherenceRef.child(fromNum).child(moment().subtract(4, 'h').format("MMM DD, YYYY")).update(temp);
     }
 
     else if(existingUser) {
