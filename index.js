@@ -65,13 +65,11 @@ app.post('/message', function (req, res) {
     var registeredUser = snapshot.hasChild(fromNum);
 
     // Unsubscribe functionality
-    if(fromMsg.toLowerCase() === "halt") {
+    if(registeredUser && fromMsg.toLowerCase() === "halt") {
       resp.message("We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN.");
-      if(registeredUser) {
-        usersRef.child(fromNum).update({
-          donotsend: true
-        });
-      }
+      usersRef.child(fromNum).update({
+        donotsend: true
+      });
     }
 
     //New User
