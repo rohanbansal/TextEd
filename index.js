@@ -27,6 +27,7 @@ var fromNumber = "+17183952719";
 //Firebase Database Access
 var Firebase = require('firebase');
 var usersRef = new Firebase('dazzling-fire-2240.firebaseio.com/Users/');
+var adherenceRef = new Firebase('dazzling-fire-2240.firebaseio.com/Adherence/');
 
 //Setup CronJob
 var cronJob = require('cron').CronJob;
@@ -50,7 +51,7 @@ app.post('/message', function (req, res) {
 
   //TODO implement error checking on message contents
   //TODO implement total # of messages sent
-  //TODO implement STOP functionality
+  //TODO implement BEGIN functionality
   //TODO implement re-email if hanging registration
   //TODO implement HELP
 
@@ -62,18 +63,31 @@ app.post('/message', function (req, res) {
 
   usersRef.once('value', function(snapshot) {
 
-    var registeredUser = snapshot.hasChild(fromNum);
+    var existingUser = snapshot.hasChild(fromNum);
+    var finishedRegistration = false;
+    if(existingUser) finishedRegistration = usersDB[fromNum].registrationComplete;
 
     // Unsubscribe functionality
-    if(registeredUser && fromMsg.toLowerCase() === "halt") {
+    if(existingUser && fromMsg.toLowerCase() === "halt") {
       resp.message("We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN.");
       usersRef.child(fromNum).update({
         donotsend: true
       });
     }
 
+    //Registered user replying with medication adherence
+    else if( finishedRegistration && ( (fromMsg.toLowerCase() === "0") || (fromMsg.toLowerCase() === "1") ) ) {
+      if(fromMsg.toLowerCase() === "1") {
+        resp.message("Congratulations on taking your medication - keep it up!");
+      }
+      else if(fromMsg.toLowerCase() === "0") {
+        resp.message("We're sorry you didn't take your medication - any particular reason why?");
+
+      }
+    }
+
     //New User
-    else if(!registeredUser) {
+    else if(!existingUser) {
       resp.message('Thank you for subscribing to TextEd! Please send us your preferred name. Reply HALT to cancel.');
       // usersRef.push(fromNum);
       usersRef.child(fromNum).set({
@@ -91,9 +105,17 @@ app.post('/message', function (req, res) {
         donotsend: false,
         registrationComplete: false
       });
+
+      adherenceRef.child(fromNum).set({
+        adherenceDates: []
+      });
+
+      adherenceRef.child(fromNum).child(adherenceDates).push({
+        abc: "hello";
+      })
     }
 
-    else if(registeredUser) {
+    else if(existingUser) {
 
       if(usersDB[fromNum].name == null) {
         resp.message('Hello ' + fromMsg + "!  How old are you?");
@@ -201,7 +223,7 @@ var textJob = new cronJob( '* * * * *', function() {
 
 //Craft message to send user
 function craftReminderMessage(user, clientMsg) {
-  return "Please remember to take your medication today!";
+  return "Please remember to take your medication today! Respond 1 if you did, and 0 if you did not.";
 }
 
 
