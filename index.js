@@ -211,8 +211,8 @@ function checkValid(input, type) {
   }
   else if(type === "time") {
     var timeRegex = '^abc&';
-    console.log(input + " " + validator.matches(input, /^(0[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
-    return (validator.matches(input, /^(0[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
+    console.log(input + " " + validator.matches(input, /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
+    return (validator.matches(input, /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
   }
 }
 
@@ -239,7 +239,9 @@ var textJob = new cronJob( '* * * * *', function() {
     currentTime.subtract(4, 'h'); //UTC Offset.  TODO: FIX time zone issues.
     //console.log("Loop Current Time: " + currentTime.format(timeFormat));
     //console.log("Reminder Time" + reminderTime.format(timeFormat));
-    if( !(currentTime.isAfter(reminderTime))  || !(usersDB[patientID].registrationStep === "complete") || usersDB[patientID].donotsend) {
+    if( !(currentTime.isAfter(reminderTime))  ||
+        !(usersDB[patientID].registrationStep === "complete") ||
+        usersDB[patientID].donotsend) {
       console.log("Skipping Reminder!");
       continue;
     }
