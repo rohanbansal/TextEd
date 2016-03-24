@@ -11,6 +11,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+var validator = require('validator');
 
 // views is directory for all template files
 app.set('views', __dirname + '/views');
@@ -42,8 +43,13 @@ app.get('/', function(request, response) {
   response.render('pages/index')
 });
 
+
+  var temp = validator.isLength("10016", {min:5, max:5});
+  console.log(temp);
+
 //What Happens when you receive a message
 app.post('/message', function (req, res) {
+
 
   //TODO implement 1/0 med aherence functionality
   //TODO implement no response counter
@@ -226,7 +232,7 @@ function craftReminderMessage(user, clientMsg) {
 }
 
 
-
+function
 
 
 
