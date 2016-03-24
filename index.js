@@ -55,26 +55,27 @@ app.post('/message', function (req, res) {
   //TODO implement HELP
 
   var resp = new twilio.TwimlResponse();
-  var fromNum = req.body.From;
   var fromMsg = req.body.Body.trim();
-
+  var patientID = req.body.From;
 
 
   usersRef.once('value', function(snapshot) {
 
     //User has begin registration process, but not necessarily completed
-    var beganRegistration = snapshot.hasChild(fromNum);
+    var beganRegistration = snapshot.hasChild(patientID);
 
     var completedRegistration = false;
+    var thisPatient;
     if(beganRegistration) {
-      var completedRegistration = (usersDB[fromNum].registrationStep === "complete");
+      var completedRegistration = (usersDB[patientID].registrationStep === "complete");
+      var thisPatient = usersDB[patientID];
     }
     console.log(completedRegistration);
 
     // Unsubscribe functionality
     if(beganRegistration && fromMsg.toLowerCase() === "halt") {
       resp.message("We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN.");
-      usersRef.child(fromNum).update({
+      usersRef.child(patientID).update({
         donotsend: true
       });
     }
@@ -82,7 +83,7 @@ app.post('/message', function (req, res) {
     //New User - never began registration
     else if(!beganRegistration) {
       resp.message('Thank you for subscribing to TextEd! Please send us your preferred name. Reply HALT to cancel.');
-      usersRef.child(fromNum).set({
+      usersRef.child(patientID).set({
         name: null,
         age: null,
         gender: null,
@@ -101,43 +102,43 @@ app.post('/message', function (req, res) {
 
     else if(beganRegistration && !completedRegistration) {
 
-      if(usersDB[fromNum].registrationStep === "name") {
+      if(thisPatient.registrationStep === "name") {
         resp.message('Hello ' + fromMsg + "!  How old are you?");
-        usersRef.child(fromNum).update({
+        usersRef.child(patientID).update({
           name: fromMsg,
           registrationStep: "age"
         });
       }
 
-      else if(usersDB[fromNum].registrationStep === "age") {
+      else if(thisPatient.registrationStep === "age") {
         resp.message('Are you male or female?  Enter M or F.');
-        usersRef.child(fromNum).update({
+        usersRef.child(patientID).update({
           age: fromMsg,
           registrationStep: "gender"
         });
       }
 
-      else if(usersDB[fromNum].registrationStep === "gender") {
+      else if(thisPatient.registrationStep === "gender") {
         resp.message('What is your 5-digit zipcode?');
-        usersRef.child(fromNum).update({
+        usersRef.child(patientID).update({
           gender: fromMsg,
           registrationStep: "zipcode"
         });
       }
 
-      else if(usersDB[fromNum].registrationStep === "zipcode") {
+      else if(thisPatient.registrationStep === "zipcode") {
         resp.message('What is your preferred time to receive daily reminders e.g. (hh:mm am/pm)?');
-        usersRef.child(fromNum).update({
+        usersRef.child(patientID).update({
           zipcode: fromMsg,
           registrationStep: "time"
         });
       }
 
-      else if(usersDB[fromNum].registrationStep === "time"){
+      else if(thisPatient.registrationStep === "time"){
         resp.message('Thank you - your registration is complete!');
 
         var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg;
-        usersRef.child(fromNum).update({
+        usersRef.child(patientID).update({
           registrationStep: "complete",
           nextReminder: newNextReminder
         });
@@ -148,12 +149,12 @@ app.post('/message', function (req, res) {
     }
 
     else if (completedRegistration){
-      resp.message("Hello " + usersDB[fromNum].name + "!  Your next reminder is: " + usersDB[fromNum].nextReminder);
+      resp.message("Hello " + thisPatient.name + "!  Your next reminder is: " + thisPatient.nextReminder);
     }
 
     // TODO increment total sent here
-    usersRef.child(fromNum).update({
-      totalSent: usersDB[fromNum].totalSent + 1
+    usersRef.child(patientID).update({
+      totalSent: thisPatient.totalSent + 1
     })
     res.writeHead(200, {
       'Content-Type':'text/xml'
@@ -196,13 +197,17 @@ var textJob = new cronJob( '* * * * *', function() {
       continue;
     }
 
+
     console.log("Sending Reminder.");
-    //Update reminder to next day
+
+    //Update reminder to next day, and increment totalSent
     reminderTime.add(1, 'days');
     usersRef.child(patientID).update({
-      nextReminder: reminderTime.format(timeFormat)
+      nextReminder: reminderTime.format(timeFormat),
+      totalSent: usersDB[patientID].totalSent + 1
     });
 
+    //Send Message
     var clientMsg = craftReminderMessage(usersDB[patientID]);
 
     client.messages.create({
