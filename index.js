@@ -87,7 +87,7 @@ app.post('/message', function (req, res) {
         startDate: moment().subtract(4, 'h').format("MMM DD, YYYY"),
         missedDoseCounter: 0,
         failedTexts: 0,
-        totalSent: 1,
+        totalSent: 0,
         nextReminder: moment().subtract(4, 'h').add(1, 'd').format("MMM DD, ") + defaultReminderTime,
         satisfaction: null,
         donotsend: false,
@@ -95,7 +95,7 @@ app.post('/message', function (req, res) {
       });
     }
 
-    else if(beganRegistration) {
+    else if(beganRegistration && !completedRegistration) {
 
       if(usersDB[fromNum].registrationStep === "name") {
         resp.message('Hello ' + fromMsg + "!  How old are you?");
@@ -136,17 +136,21 @@ app.post('/message', function (req, res) {
         usersRef.child(fromNum).update({
           registrationStep: "complete",
           nextReminder: newNextReminder
-          //nextReminder: fromMsg TODO Add next reminder functionality
         });
       }
 
-      else {
-        resp.message("Hello " + usersDB[fromNum].name + "!  Your next reminder is: " + usersDB[fromNum].nextReminder);
-      }
+
 
     }
 
+    else if (completedRegistration){
+      resp.message("Hello " + usersDB[fromNum].name + "!  Your next reminder is: " + usersDB[fromNum].nextReminder);
+    }
+
     // TODO increment total sent here
+    usersRef.child(fromNum).update({
+      totalSent: usersDb[fromNum].totalSent + 1;
+    })
     res.writeHead(200, {
       'Content-Type':'text/xml'
     });
