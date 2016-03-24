@@ -64,7 +64,11 @@ app.post('/message', function (req, res) {
 
     //User has begin registration process, but not necessarily completed
     var beganRegistration = snapshot.hasChild(fromNum);
-    var completedRegistration = (usersDB[fromNum].registrationStep === "complete");
+
+    var completedRegistration = false;
+    if(beganRegistration) {
+      var completedRegistration = (usersDB[fromNum].registrationStep === "complete");
+    }
     console.log(completedRegistration);
 
     // Unsubscribe functionality
@@ -149,7 +153,7 @@ app.post('/message', function (req, res) {
 
     // TODO increment total sent here
     usersRef.child(fromNum).update({
-      totalSent: usersDB[fromNum].totalSent + 1
+      totalSent: usersDb[fromNum].totalSent + 1
     })
     res.writeHead(200, {
       'Content-Type':'text/xml'
