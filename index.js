@@ -195,7 +195,7 @@ app.post('/message', function (req, res) {
 function checkValid(input, type) {
   if(type === "name") {
     console.log(input + " " + validator.isLength(input, {min:1, max:25}));
-    return validator.isLength(input, {min:1, max:20});
+    return validator.isLength(input, {min:1, max:25});
   }
   else if(type === "age") {
     console.log(input + " " + validator.isInt(input, {min:1, max:100}));
@@ -214,6 +214,7 @@ function checkValid(input, type) {
     console.log(input + " " + validator.matches(input, /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
     return (validator.matches(input, /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
   }
+  else return false;
 }
 
 
