@@ -95,7 +95,7 @@ app.post('/message', function (req, res) {
       });
     }
 
-    else if(beganRegistration && ) {
+    else if(beganRegistration) {
 
       if(usersDB[fromNum].registrationStep === "name") {
         resp.message('Hello ' + fromMsg + "!  How old are you?");
