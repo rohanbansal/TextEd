@@ -28,6 +28,7 @@ var fromNumber = "+17183952719";
 //Firebase Database Access
 var Firebase = require('firebase');
 var usersRef = new Firebase('dazzling-fire-2240.firebaseio.com/Users/');
+var adherenceRef = new Firebase('dazzling-fire-2240.firebaseio.com/Adherence/');
 
 //Setup CronJob
 var cronJob = require('cron').CronJob;
@@ -43,7 +44,6 @@ app.get('/', function(request, response) {
   response.render('pages/index')
 });
 
-var temp = "3";
 
 //What Happens when you receive a message
 app.post('/message', function (req, res) {
@@ -51,9 +51,6 @@ app.post('/message', function (req, res) {
 
   //TODO implement 1/0 med aherence functionality
   //TODO implement no response counter
-
-  //TODO implement error checking on message contents
-  //TODO implement total # of messages sent
   //TODO implement STOP functionality
   //TODO implement re-email if hanging registration
   //TODO implement HELP
@@ -165,7 +162,7 @@ app.post('/message', function (req, res) {
           }
           resp.message('Thank you - your registration is complete!');
 
-          var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg;
+          var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg; //TODO update to add 1 day so reminders start tomorrow
           usersRef.child(patientID).update({
             registrationStep: "complete",
             nextReminder: newNextReminder
@@ -175,11 +172,19 @@ app.post('/message', function (req, res) {
 
     }
 
+    //Adherence Message
+    else if (completedRegistration && (fromMsg === "1" || fromMsg === "0")){
+      var dateAdherence = {};
+      dateAdherence[moment().subtract(4, 'h').add(1, 'd').format("MMM DD, YYYY")] = fromMsg;
+      adherenceRef.child(patientID).update(dateAdherence);
+      if(fromMsg === "1") resp.message("Congratulations!  Keep taking your medication.");
+      else if (fromMsg === "0") resp.message("I'm sorry - any reason you didn't take your medications today?");
+    }
+
     else if (completedRegistration){
       resp.message("Hello " + usersDB[patientID].name + "!  Your next reminder is: " + usersDB[patientID].nextReminder);
     }
 
-    // TODO increment total sent here
     usersRef.child(patientID).update({
       totalSent: usersDB[patientID].totalSent + 1
     })
@@ -249,6 +254,9 @@ var textJob = new cronJob( '* * * * *', function() {
 
 
     console.log("Sending Reminder.");
+
+    //check adherence database - did they respond yesterday?
+
 
     //Update reminder to next day, and increment totalSent
     reminderTime.add(1, 'days');
