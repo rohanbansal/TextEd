@@ -43,7 +43,7 @@ app.get('/', function(request, response) {
   response.render('pages/index')
 });
 
-
+var temp = "3";
 
 //What Happens when you receive a message
 app.post('/message', function (req, res) {
