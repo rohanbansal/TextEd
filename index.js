@@ -149,7 +149,7 @@ app.post('/message', function (req, res) {
 
     // TODO increment total sent here
     usersRef.child(fromNum).update({
-      totalSent: usersDb[fromNum].totalSent + 1
+      totalSent: usersDB[fromNum].totalSent + 1
     })
     res.writeHead(200, {
       'Content-Type':'text/xml'
