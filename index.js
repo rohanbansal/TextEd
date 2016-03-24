@@ -44,8 +44,6 @@ app.get('/', function(request, response) {
 });
 
 
-  var temp = validator.isLength("10016", {min:5, max:5});
-  console.log(temp);
 
 //What Happens when you receive a message
 app.post('/message', function (req, res) {
@@ -107,48 +105,73 @@ app.post('/message', function (req, res) {
     else if(beganRegistration && !completedRegistration) {
 
       if(usersDB[patientID].registrationStep === "name") {
-        resp.message('Hello ' + fromMsg + "!  How old are you?");
-        usersRef.child(patientID).update({
-          name: fromMsg,
-          registrationStep: "age"
-        });
+        var validName = checkValid(fromMsg, "name");
+        if(!validName) resp.message('Sorry, names must be less than 25 characters.  Please try again, or send DECLINE to skip.');
+        else {
+          resp.message('Hello ' + fromMsg + "!  How old are you?");
+          usersRef.child(patientID).update({
+            name: fromMsg,
+            registrationStep: "age"
+          });
+        }
       }
 
       else if(usersDB[patientID].registrationStep === "age") {
-        resp.message('Are you male or female?  Enter M or F.');
-        usersRef.child(patientID).update({
-          age: fromMsg,
-          registrationStep: "gender"
-        });
+        var validAge = checkValid(fromMsg, "age");
+        if(!validAge) resp.message('Sorry, your age must be a number between 18-100.  Please try again, or send DECLINE to skip.');
+        else {
+          resp.message('Are you male or female?  Enter M or F.');
+          usersRef.child(patientID).update({
+            age: fromMsg,
+            registrationStep: "gender"
+          });
+        }
       }
 
       else if(usersDB[patientID].registrationStep === "gender") {
-        resp.message('What is your 5-digit zipcode?');
-        usersRef.child(patientID).update({
-          gender: fromMsg,
-          registrationStep: "zipcode"
-        });
+        var validGender = checkValid(fromMsg, "gender");
+        if(!validGender) resp.message('Sorry, please send either M or F.  Please try again, or send DECLINE to skip.');
+        else {
+          resp.message('What is your 5-digit zipcode?');
+          usersRef.child(patientID).update({
+            gender: fromMsg,
+            registrationStep: "zipcode"
+          });
+        }
       }
 
       else if(usersDB[patientID].registrationStep === "zipcode") {
-        resp.message('What is your preferred time to receive daily reminders e.g. (hh:mm am/pm)?');
-        usersRef.child(patientID).update({
-          zipcode: fromMsg,
-          registrationStep: "time"
-        });
+        var validZipcode = checkValid(fromMsg, "zipcode");
+        if(!validZipcode) resp.message('Sorry, please enter a valid 5-digit US zipcode.  Please try again, or send DECLINE to skip.');
+        else {
+          resp.message('What is your preferred time to receive daily reminders e.g. (hh:mm am/pm)?');
+          usersRef.child(patientID).update({
+            zipcode: fromMsg,
+            registrationStep: "time"
+          });
+        }
       }
 
       else if(usersDB[patientID].registrationStep === "time"){
-        resp.message('Thank you - your registration is complete!');
+        var validTime = checkValid(fromMsg, "time");
+        var validAMAppendTime = checkValid(fromMsg + "am", "time");
 
-        var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg;
-        usersRef.child(patientID).update({
-          registrationStep: "complete",
-          nextReminder: newNextReminder
-        });
+        if(!validTime && !validAMAppendTime) {
+          resp.message('Sorry, please send your preferred time in the format "hh:mm am/pm".  Please try again, or send DECLINE to skip.');
+        }
+        else {
+          if(!validTime) {
+            fromMsg = fromMsg + "am";
+          }
+          resp.message('Thank you - your registration is complete!');
+
+          var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg;
+          usersRef.child(patientID).update({
+            registrationStep: "complete",
+            nextReminder: newNextReminder
+          });
+        }
       }
-
-
 
     }
 
@@ -169,9 +192,29 @@ app.post('/message', function (req, res) {
 });
 
 
-
-
-
+function checkValid(input, type) {
+  if(type === "name") {
+    console.log(input + " " + validator.isLength(input, {min:1, max:25}));
+    return validator.isLength(input, {min:1, max:20});
+  }
+  else if(type === "age") {
+    console.log(input + " " + validator.isInt(input, {min:1, max:100}));
+    return validator.isInt(input, {min:1, max:100});
+  }
+  else if(type === "gender") {
+    console.log(input + " " + validator.isIn(input, ['M', 'F']));
+    return validator.isIn(input, ['M', 'F']);
+  }
+  else if(type === "zipcode") {
+    console.log(input + " " + (validator.isLength(input, {min:5, max:5}) && validator.isNumeric(input)));
+    return (validator.isLength(input, {min:5, max:5}) && validator.isNumeric(input));
+  }
+  else if(type === "time") {
+    var timeRegex = '^abc&';
+    console.log(input + " " + validator.matches(input, /^(0[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
+    return (validator.matches(input, /^(0[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
+  }
+}
 
 
 // Log every time the database is changed
@@ -230,9 +273,6 @@ var textJob = new cronJob( '* * * * *', function() {
 function craftReminderMessage(user, clientMsg) {
   return "Please remember to take your medication today!";
 }
-
-
-function
 
 
 
