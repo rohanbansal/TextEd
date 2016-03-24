@@ -202,7 +202,7 @@ function checkValid(input, type) {
     return validator.isInt(input, {min:1, max:100});
   }
   else if(type === "gender") {
-    console.log(input + " " + validator.isIn(input, ['M', 'F']));
+    console.log(input + " " + validator.isIn(input, ['M', 'F', 'm', 'f']));
     return validator.isIn(input, ['M', 'F']);
   }
   else if(type === "zipcode") {
