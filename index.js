@@ -65,10 +65,8 @@ app.post('/message', function (req, res) {
     var beganRegistration = snapshot.hasChild(patientID);
 
     var completedRegistration = false;
-    var thisPatient;
     if(beganRegistration) {
       var completedRegistration = (usersDB[patientID].registrationStep === "complete");
-      var thisPatient = usersDB[patientID];
     }
     console.log(completedRegistration);
 
@@ -102,7 +100,7 @@ app.post('/message', function (req, res) {
 
     else if(beganRegistration && !completedRegistration) {
 
-      if(thisPatient.registrationStep === "name") {
+      if(usersDB[patientID].registrationStep === "name") {
         resp.message('Hello ' + fromMsg + "!  How old are you?");
         usersRef.child(patientID).update({
           name: fromMsg,
@@ -110,7 +108,7 @@ app.post('/message', function (req, res) {
         });
       }
 
-      else if(thisPatient.registrationStep === "age") {
+      else if(usersDB[patientID].registrationStep === "age") {
         resp.message('Are you male or female?  Enter M or F.');
         usersRef.child(patientID).update({
           age: fromMsg,
@@ -118,7 +116,7 @@ app.post('/message', function (req, res) {
         });
       }
 
-      else if(thisPatient.registrationStep === "gender") {
+      else if(usersDB[patientID].registrationStep === "gender") {
         resp.message('What is your 5-digit zipcode?');
         usersRef.child(patientID).update({
           gender: fromMsg,
@@ -126,7 +124,7 @@ app.post('/message', function (req, res) {
         });
       }
 
-      else if(thisPatient.registrationStep === "zipcode") {
+      else if(usersDB[patientID].registrationStep === "zipcode") {
         resp.message('What is your preferred time to receive daily reminders e.g. (hh:mm am/pm)?');
         usersRef.child(patientID).update({
           zipcode: fromMsg,
@@ -134,7 +132,7 @@ app.post('/message', function (req, res) {
         });
       }
 
-      else if(thisPatient.registrationStep === "time"){
+      else if(usersDB[patientID].registrationStep === "time"){
         resp.message('Thank you - your registration is complete!');
 
         var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg;
@@ -149,12 +147,12 @@ app.post('/message', function (req, res) {
     }
 
     else if (completedRegistration){
-      resp.message("Hello " + thisPatient.name + "!  Your next reminder is: " + thisPatient.nextReminder);
+      resp.message("Hello " + usersDB[patientID].name + "!  Your next reminder is: " + usersDB[patientID].nextReminder);
     }
 
     // TODO increment total sent here
     usersRef.child(patientID).update({
-      totalSent: thisPatient.totalSent + 1
+      totalSent: usersDB[patientID].totalSent + 1
     })
     res.writeHead(200, {
       'Content-Type':'text/xml'
