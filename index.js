@@ -65,7 +65,7 @@ app.post('/message', function (req, res) {
     //User has begin registration process, but not necessarily completed
     var beganRegistration = snapshot.hasChild(fromNum);
     var completedRegistration = (usersDB[fromNum].registrationStep === "complete");
-    consolue.log(completedRegistration);
+    console.log(completedRegistration);
 
     // Unsubscribe functionality
     if(beganRegistration && fromMsg.toLowerCase() === "halt") {
