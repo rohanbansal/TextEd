@@ -64,6 +64,8 @@ app.post('/message', function (req, res) {
 
     //User has begin registration process, but not necessarily completed
     var beganRegistration = snapshot.hasChild(fromNum);
+    var completedRegistration = (usersDB[fromNum].registrationStep === "complete");
+    consolue.log(completedRegistration);
 
     // Unsubscribe functionality
     if(beganRegistration && fromMsg.toLowerCase() === "halt") {
@@ -93,7 +95,7 @@ app.post('/message', function (req, res) {
       });
     }
 
-    else if(beganRegistration) {
+    else if(beganRegistration && ) {
 
       if(usersDB[fromNum].registrationStep === "name") {
         resp.message('Hello ' + fromMsg + "!  How old are you?");
@@ -130,7 +132,7 @@ app.post('/message', function (req, res) {
       else if(usersDB[fromNum].registrationStep === "time"){
         resp.message('Thank you - your registration is complete!');
 
-        var newNextReminder = moment().subtract(4, 'h').add(1, 'd').format("MMM DD, ") + fromMsg;
+        var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg;
         usersRef.child(fromNum).update({
           registrationStep: "complete",
           nextReminder: newNextReminder
@@ -144,6 +146,7 @@ app.post('/message', function (req, res) {
 
     }
 
+    // TODO increment total sent here
     res.writeHead(200, {
       'Content-Type':'text/xml'
     });
