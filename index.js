@@ -220,7 +220,7 @@ function checkValid(input, type) {
 
 // Log every time the database is changed
 usersRef.on("value", function(snapshot) {
-  console.log(snapshot.val());
+  console.log("Current Database: " + snapshot.val());
   usersDB = snapshot.val();
 }, function (errorObject) {
   console.log("The read failed: " + errorObject.code)
