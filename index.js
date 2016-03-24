@@ -77,7 +77,7 @@ app.post('/message', function (req, res) {
 
     //New User - never began registration
     else if(!beganRegistration) {
-      resp.message('Thank you for subscribing to Rohans TextEd! Please send us your preferred name. Reply HALT to cancel.');
+      resp.message('Thank you for subscribing to TextEd! Please send us your preferred name. Reply HALT to cancel.');
       usersRef.child(fromNum).set({
         name: null,
         age: null,
@@ -149,7 +149,7 @@ app.post('/message', function (req, res) {
 
     // TODO increment total sent here
     usersRef.child(fromNum).update({
-      totalSent: usersDb[fromNum].totalSent + 1;
+      totalSent: usersDb[fromNum].totalSent + 1
     })
     res.writeHead(200, {
       'Content-Type':'text/xml'
