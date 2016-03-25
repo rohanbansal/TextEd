@@ -31,18 +31,11 @@ var fromNumber = "+17183952719";
 var Firebase = require('firebase');
 var usersRef = new Firebase('dazzling-fire-2240.firebaseio.com/Users/');
 var adherenceRef = new Firebase('dazzling-fire-2240.firebaseio.com/Adherence/');
+var usersDB = {};  //Local copy of database
 
 //Setup CronJob
 var cronJob = require('cron').CronJob;
 var moment = require('moment');
-
-var usersDB = {};  //Local copy of database
-
-
-
-
-
-
 
 
 
@@ -71,8 +64,7 @@ app.post('/message', function (req, res) {
   var completedRegistration = false; //User completed registration
   if(beganRegistration) {
     var completedRegistration = (usersDB[patientID].registrationStep === "complete");
-    if(usersDB[patientID].preferredLanguage === "en") localeString = textedStrings.en;
-    else if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
+    if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
   }
 
   // Unsubscribe functionality
@@ -107,15 +99,26 @@ app.post('/message', function (req, res) {
   // Continue Registration
   else if(beganRegistration && !completedRegistration) {
 
+
     if(usersDB[patientID].registrationStep === "name") {
-      var validName = checkValid(fromMsg, "name");
-      if(!validName) resp.message(localeString.invalidName);
-      else {
-        resp.message(localeString.ageRegistration(fromMsg)); //FIXME
+      //Switch to spanish if user selects
+      if(fromMsg.toLowerCase === "espanol") {
+        localeString = textedStrings.es;
+        resp.message(localeString.newUser);
         usersRef.child(patientID).update({
-          name: fromMsg,
-          registrationStep: "age"
+          preferredLanguage: "es"
         });
+      }
+      else {
+        var validName = checkValid(fromMsg, "name");
+        if(!validName) resp.message(localeString.invalidName);
+        else {
+          resp.message(localeString.ageRegistration(fromMsg)); //FIXME
+          usersRef.child(patientID).update({
+            name: fromMsg,
+            registrationStep: "age"
+          });
+        }
       }
     }
 
@@ -137,7 +140,7 @@ app.post('/message', function (req, res) {
       else {
         resp.message(localeString.zipcodeRegistration);
         usersRef.child(patientID).update({
-          gender: fromMsg,
+          gender: fromMsg.toLowerCase(),
           registrationStep: "zipcode"
         });
       }
@@ -260,10 +263,11 @@ var textJob = new cronJob( '* * * * *', function() {
     });
 
     //Send Message
-    var clientMsg = craftReminderMessage(usersDB[patientID]);
+    if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
+    else localeString = textedStrings.en;
 
     client.messages.create({
-      body: clientMsg,
+      body: localeString.reminderMsg(usersDB[patientID]),
       to: patientID,
       from: fromNumber
     }, function(err, message) {
@@ -272,14 +276,6 @@ var textJob = new cronJob( '* * * * *', function() {
   }
 
 }, null, true);
-
-
-//Craft message to send user
-function craftReminderMessage(user) {
-  return "Please remember to take your medication today!";
-}
-
-
 
 
 //Set Up Port Listening
