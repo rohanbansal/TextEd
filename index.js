@@ -221,7 +221,6 @@ function checkValid(input, type) {
 
 // Log every time the database is changed
 usersRef.on("value", function(snapshot) {
-  console.log("Current Database: " + snapshot.val());
   usersDB = snapshot.val();
 
   if(snapshot.val() == null) usersDB = {};
