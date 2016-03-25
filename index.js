@@ -64,14 +64,13 @@ app.post('/message', function (req, res) {
   var resp = new twilio.TwimlResponse();
   var fromMsg = req.body.Body.trim();
   var patientID = req.body.From;
-
+  var localeString = textedStrings.en;
 
   var beganRegistration = (usersDB[patientID] != null); //User at least began registration
 
   var completedRegistration = false; //User completed registration
   if(beganRegistration) {
     var completedRegistration = (usersDB[patientID].registrationStep === "complete");
-    var localeString = textedStrings.en;;
     if(usersDB[patientID].preferredLanguage === "en") localeString = textedStrings.en;
     else if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
   }
