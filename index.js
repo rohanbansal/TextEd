@@ -1,6 +1,7 @@
 //Initialize and set up app
 var express = require('express');
 var app = express();
+var textedStrings = require('./js/textedStrings')
 
 app.set('port', (process.env.PORT || 5000));
 app.use(express.static(__dirname + '/public'));
@@ -34,11 +35,9 @@ var adherenceRef = new Firebase('dazzling-fire-2240.firebaseio.com/Adherence/');
 //Setup CronJob
 var cronJob = require('cron').CronJob;
 var moment = require('moment');
-var timeFormat = "MMM DD, hh:mm a";
-var defaultReminderTime = "08:00 am";
 
 var usersDB = {};  //Local copy of database
-console.log("temp: " + usersDB);
+
 //Home Page View
 app.get('/', function(request, response) {
   response.render('pages/index')
@@ -68,7 +67,7 @@ app.post('/message', function (req, res) {
 
   // Unsubscribe functionality
   if(beganRegistration && fromMsg.toLowerCase() === "halt") {
-    resp.message("We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN.");
+    resp.message(textedStrings.unsubscribeMsg);
     usersRef.child(patientID).update({
       donotsend: true
     });
@@ -76,7 +75,7 @@ app.post('/message', function (req, res) {
 
   //New User - never began registration
   else if(!beganRegistration) {
-    resp.message('Thank you for subscribing to TextEd! Please send us your preferred name. Reply HALT to cancel.');
+    resp.message(textedStrings.newUser);
     usersRef.child(patientID).set({
       name: null,
       age: null,
@@ -87,7 +86,7 @@ app.post('/message', function (req, res) {
       missedDoseCounter: 0,
       failedTexts: 0,
       totalSent: 0,
-      nextReminder: moment().subtract(4, 'h').add(1, 'd').format("MMM DD, ") + defaultReminderTime,
+      nextReminder: moment().subtract(4, 'h').add(1, 'd').format("MMM DD, ") + textedStrings.defaultReminderTime,
       satisfaction: null,
       donotsend: false,
       registrationStep: "name" //[name, age, gender, zipcode, time, complete]
@@ -224,7 +223,7 @@ var textJob = new cronJob( '* * * * *', function() {
   for (var patientID in usersDB) {
 
     //Has their reminder time passed? If not, then don't send a message.
-    var reminderTime = moment(usersDB[patientID].nextReminder, timeFormat);
+    var reminderTime = moment(usersDB[patientID].nextReminder, textedStrings.timeFormat);
     var currentTime = moment();
     currentTime.subtract(4, 'h'); //UTC Offset.  TODO: FIX time zone issues.
     //console.log("Loop Current Time: " + currentTime.format(timeFormat));
@@ -244,7 +243,7 @@ var textJob = new cronJob( '* * * * *', function() {
     //Update reminder to next day, and increment totalSent
     reminderTime.add(1, 'days');
     usersRef.child(patientID).update({
-      nextReminder: reminderTime.format(timeFormat),
+      nextReminder: reminderTime.format(textedStrings.timeFormat),
       totalSent: usersDB[patientID].totalSent + 1
     });
 
