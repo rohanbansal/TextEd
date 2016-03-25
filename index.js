@@ -102,7 +102,7 @@ app.post('/message', function (req, res) {
 
     if(usersDB[patientID].registrationStep === "name") {
       //Switch to spanish if user selects
-      if(fromMsg.toLowerCase === "espanol") {
+      if(fromMsg.toLowerCase() === "espanol") {
         localeString = textedStrings.es;
         resp.message(localeString.newUser);
         usersRef.child(patientID).update({
