@@ -38,6 +38,14 @@ var moment = require('moment');
 
 var usersDB = {};  //Local copy of database
 
+
+
+
+
+
+
+
+
 //Home Page View
 app.get('/', function(request, response) {
   response.render('pages/index')
@@ -63,11 +71,14 @@ app.post('/message', function (req, res) {
   var completedRegistration = false; //User completed registration
   if(beganRegistration) {
     var completedRegistration = (usersDB[patientID].registrationStep === "complete");
+    var localeString = textedStrings.en;;
+    if(usersDB[patientID].preferredLanguage === "en") localeString = textedStrings.en;
+    else if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
   }
 
   // Unsubscribe functionality
   if(beganRegistration && fromMsg.toLowerCase() === "halt") {
-    resp.message(textedStrings.unsubscribeMsg);
+    resp.message(localeString.unsubscribeMsg);
     usersRef.child(patientID).update({
       donotsend: true
     });
@@ -75,7 +86,7 @@ app.post('/message', function (req, res) {
 
   //New User - never began registration
   else if(!beganRegistration) {
-    resp.message(textedStrings.newUser);
+    resp.message(localeString.newUser);
     usersRef.child(patientID).set({
       name: null,
       age: null,
@@ -89,7 +100,8 @@ app.post('/message', function (req, res) {
       nextReminder: moment().subtract(4, 'h').add(1, 'd').format("MMM DD, ") + textedStrings.defaultReminderTime,
       satisfaction: null,
       donotsend: false,
-      registrationStep: "name" //[name, age, gender, zipcode, time, complete]
+      registrationStep: "name", //[name, age, gender, zipcode, time, complete]
+      preferredLanguage: "en"
     });
   }
 
@@ -98,9 +110,9 @@ app.post('/message', function (req, res) {
 
     if(usersDB[patientID].registrationStep === "name") {
       var validName = checkValid(fromMsg, "name");
-      if(!validName) resp.message('Sorry, names must be less than 25 characters.  Please try again, or send DECLINE to skip.');
+      if(!validName) resp.message(localeString.invalidName);
       else {
-        resp.message('Hello ' + fromMsg + "!  How old are you?");
+        resp.message(localeString.ageRegistration(fromMsg)); //FIXME
         usersRef.child(patientID).update({
           name: fromMsg,
           registrationStep: "age"
@@ -110,9 +122,9 @@ app.post('/message', function (req, res) {
 
     else if(usersDB[patientID].registrationStep === "age") {
       var validAge = checkValid(fromMsg, "age");
-      if(!validAge) resp.message('Sorry, your age must be a number between 18-100.  Please try again, or send DECLINE to skip.');
+      if(!validAge) resp.message(localeString.invalidAge);
       else {
-        resp.message('Are you male or female?  Enter M or F.');
+        resp.message(localeString.genderRegistration);
         usersRef.child(patientID).update({
           age: fromMsg,
           registrationStep: "gender"
@@ -122,9 +134,9 @@ app.post('/message', function (req, res) {
 
     else if(usersDB[patientID].registrationStep === "gender") {
       var validGender = checkValid(fromMsg, "gender");
-      if(!validGender) resp.message('Sorry, please send either M or F.  Please try again, or send DECLINE to skip.');
+      if(!validGender) resp.message(localeString.invalidGender);
       else {
-        resp.message('What is your 5-digit zipcode?');
+        resp.message(localeString.zipcodeRegistration);
         usersRef.child(patientID).update({
           gender: fromMsg,
           registrationStep: "zipcode"
@@ -134,9 +146,9 @@ app.post('/message', function (req, res) {
 
     else if(usersDB[patientID].registrationStep === "zipcode") {
       var validZipcode = checkValid(fromMsg, "zipcode");
-      if(!validZipcode) resp.message('Sorry, please enter a valid 5-digit US zipcode.  Please try again, or send DECLINE to skip.');
+      if(!validZipcode) resp.message(localeString.invalidZipcode);
       else {
-        resp.message('What is your preferred time to receive daily reminders e.g. (hh:mm am/pm)?');
+        resp.message(localeString.preferredTimeRegistration);
         usersRef.child(patientID).update({
           zipcode: fromMsg,
           registrationStep: "time"
@@ -149,13 +161,13 @@ app.post('/message', function (req, res) {
       var validAMAppendTime = checkValid(fromMsg + "am", "time");
 
       if(!validTime && !validAMAppendTime) {
-        resp.message('Sorry, please send your preferred time in the format "hh:mm am/pm".  Please try again, or send DECLINE to skip.');
+        resp.message(localeString.invalidTime);
       }
       else {
         if(!validTime) {
           fromMsg = fromMsg + "am";
         }
-        resp.message('Thank you - your registration is complete!');
+        resp.message(localeString.registrationComplete);
 
         var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg; //TODO update to add 1 day so reminders start tomorrow
         usersRef.child(patientID).update({
@@ -172,13 +184,13 @@ app.post('/message', function (req, res) {
     var dateAdherence = {};
     dateAdherence[moment().subtract(4, 'h').add(1, 'd').format("MMM DD, YYYY")] = fromMsg;
     adherenceRef.child(patientID).update(dateAdherence);
-    if(fromMsg === "1") resp.message("Congratulations!  Keep taking your medication.");
-    else if (fromMsg === "0") resp.message("I'm sorry - any reason you didn't take your medications today?");
+    if(fromMsg === "1") resp.message(localeString.takenMedication);
+    else if (fromMsg === "0") resp.message(localeString.missedMedication);
   }
 
   // Respond with user's next reminder with any other message
   else if (completedRegistration){
-    resp.message("Hello " + usersDB[patientID].name + "!  Your next reminder is: " + usersDB[patientID].nextReminder);
+    resp.message(localeString.nextReminderMsg(usersDB[patientID]));
   }
 
 
@@ -209,6 +221,7 @@ function checkValid(input, type) {
 usersRef.on("value", function(snapshot) {
   console.log("Current Database: " + snapshot.val());
   usersDB = snapshot.val();
+
   if(snapshot.val() == null) usersDB = {};
 }, function (errorObject) {
   console.log("The read failed: " + errorObject.code)
