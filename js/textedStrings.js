@@ -1,7 +1,6 @@
 exports.timeFormat = "MMM DD, hh:mm a";
 exports.defaultReminderTime = "08:00 am";
 
-
 var es = {
   unsubscribeMsg: "Esp: We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN.",
   newUser: "Esp: Thank you for subscribing to TextEd! Please send us your preferred name. Reply HALT to cancel.",
