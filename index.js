@@ -22,7 +22,7 @@ var accountSid = 'AC6a81927144f093104da4c55719686ca8';
 var authToken = '8f867cee5898249629bc247bac039b70';
 var twilio = require('twilio');
 var client = twilio(accountSid, authToken);
-var fromNumber = ["+17183952719", "+16096513230"];
+var fromNumbers = ["+17183952719", "+17183952719"];
 
 //Firebase Database Access
 var Firebase = require('firebase');
@@ -38,7 +38,39 @@ var moment = require('moment');
 
 //Home Page View
 app.get('/', function(request, response) {
-  response.render('pages/index')
+  response.render('pages/index');
+});
+
+
+/*
+Request to join TextEd.
+Content-Type: application/x-www-form-urlencoded
+phoneNumber: 10 digit number, no spaces.
+*/
+app.post('/join', function(req, res) {
+  var phoneNumber = req.body.phoneNumber;
+  var resp;
+  var userNum = "+1" + phoneNumber;
+
+  //Already started registration process
+  if(usersDB[userNum] != null) resp = "Already registered!";
+  else {
+    var randomTwilioNum = fromNumbers[Math.floor(Math.random()*fromNumbers.length)];
+    console.log("sending from: " + randomTwilioNum);
+    textedHelpers.createNewUser(usersRef, userNum);
+    textedHelpers.updateUser(usersRef, userNum, 'associatedTwilioNum', randomTwilioNum);
+
+    client.sendMessage({
+      to: userNum,
+      from: randomTwilioNum,
+      body: textedStrings.en.newUser
+    }, function(err, message) {
+      if(err) {console.log(err.message);}
+    });
+
+    resp = "Now you're signed up!";
+  }
+  res.end(resp);
 });
 
 //Playground testing
@@ -71,6 +103,17 @@ app.post('/message', function (req, res) {
     textedHelpers.createNewUser(usersRef, patientID);
 
     textedHelpers.updateUser(usersRef, patientID, 'associatedTwilioNum', twilioNum);
+  }
+
+  //FIXME:  remove.  temporary to delete record from DB.
+  else if(beganRegistration && fromMsg.toLowerCase() === "remove") {
+    resp.message("Removed from database.");
+    usersRef.child(patientID).remove();
+    res.writeHead(200, {
+      'Content-Type':'text/xml'
+    });
+    res.end(resp.toString());
+    return;
   }
 
   // Unsubscribe functionality
@@ -210,9 +253,6 @@ var textJob = new cronJob( '* * * * *', function() {
     if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
     else localeString = textedStrings.en;
 
-
-
-
     client.sendMessage({
       to: patientID,
       from: usersDB[patientID].associatedTwilioNum,
@@ -220,6 +260,7 @@ var textJob = new cronJob( '* * * * *', function() {
     }, function(err, message) {
       if(err) {console.log(error.message);}
     });
+
   }
 
 }, null, true);
