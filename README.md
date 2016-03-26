@@ -20,4 +20,6 @@ Rebasing:
 
 git log origin/master..master
 
-git rebase -i origin/master --> git push
+git rebase -i origin/master --> git push origin master
+
+git push -f heroku master

@@ -15,6 +15,7 @@ var es = {
   registrationComplete: "Esp: Thank you - your registration is complete!",
   takenMedication: "Esp: Congratulations!  Keep taking your medication.",
   missedMedication: "Esp: I'm sorry - any reason you didn't take your medication today?"
+  helpMeMsg: "Esp:  Help message."
 };
 
 es.ageRegistration = function(name) {
@@ -46,6 +47,7 @@ var en = {
   registrationComplete: "Thank you - your registration is complete!",
   takenMedication: "Congratulations!  Keep taking your medication.",
   missedMedication: "I'm sorry - any reason you didn't take your medication today?"
+  helpMeMsg: "Help message."
 };
 
 en.ageRegistration = function(name) {

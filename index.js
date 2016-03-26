@@ -42,16 +42,13 @@ app.get('/', function(request, response) {
 });
 
 //Playground testing
-console.log("squash 3");
 
 //What Happens when you receive a message
 app.post('/message', function (req, res) {
 
   //TODO implement 1/0 med aherence functionality
   //TODO implement no response counter
-  //TODO implement STOP functionality
   //TODO implement re-email if hanging registration
-  //TODO implement HELP
 
   var resp = new twilio.TwimlResponse();
   var fromMsg = req.body.Body.trim();
@@ -76,6 +73,12 @@ app.post('/message', function (req, res) {
   // Unsubscribe functionality
   else if(beganRegistration && fromMsg.toLowerCase() === "halt") {
     resp.message(localeString.unsubscribeMsg);
+    textedHelpers.updateUser(usersRef, patientID, "donotsend", true);
+  }
+
+  // Help functionality
+  else if(beganRegistration && fromMsg.toLowerCase() === "helpme") {
+    resp.message(localeString.helpMeMsg);
     textedHelpers.updateUser(usersRef, patientID, "donotsend", true);
   }
 
