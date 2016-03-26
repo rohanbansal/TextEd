@@ -13,9 +13,6 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-//Initialize Validator for registration setup
-var validator = require('validator');
-
 // views is directory for all template files
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -45,9 +42,6 @@ app.get('/', function(request, response) {
   response.render('pages/index')
 });
 
-
-
-
 //Playground testing
 
 
@@ -73,7 +67,6 @@ app.post('/message', function (req, res) {
     var completedRegistration = (usersDB[patientID].registrationStep === "complete");
     if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
   }
-
 
   //New User - never began registration
   if(!beganRegistration) {
@@ -176,7 +169,6 @@ app.post('/message', function (req, res) {
 // Log every time the database is changed
 usersRef.on("value", function(snapshot) {
   usersDB = snapshot.val();
-
   if(snapshot.val() == null) usersDB = {};
 }, function (errorObject) {
   console.log("The read failed: " + errorObject.code)
@@ -195,25 +187,17 @@ var textJob = new cronJob( '* * * * *', function() {
     var currentTime = moment();
     currentTime.subtract(4, 'h'); //UTC Offset.  TODO: FIX time zone issues.
     //console.log("Loop Current Time: " + currentTime.format(timeFormat));
-    if( !(currentTime.isAfter(reminderTime))  ||
-    !(usersDB[patientID].registrationStep === "complete") ||
-    usersDB[patientID].donotsend) {
-      console.log("Skipping Reminder!");
-      continue;
-    }
 
-
-    console.log("Sending Reminder.");
+    if( !(currentTime.isAfter(reminderTime))  || //patient's reminder is for later
+    !(usersDB[patientID].registrationStep === "complete") || //patient has not finished registration
+    usersDB[patientID].donotsend) continue;  //patient does not message
 
     //check adherence database - did they respond yesterday?
 
 
     //Update reminder to next day, and increment totalSent
     reminderTime.add(1, 'days');
-    usersRef.child(patientID).update({
-      nextReminder: reminderTime.format(textedStrings.timeFormat),
-      totalSent: usersDB[patientID].totalSent + 1
-    });
+    textedHelpers.updateUser(usersRef, patientID, 'nextReminder', reminderTime.format(textedStrings.timeFormat), 'totalSent', usersDB[patientID].totalSent + 1);
 
     //Send Message
     if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;

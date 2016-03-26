@@ -1,11 +1,10 @@
 var moment = require('moment');
 var textedStrings = require('./textedStrings');
 
-
 //Initialize Validator for registration setup
 var validator = require('validator');
 
-var updateUser = function(database, userID, userKey, userValue) {
+exports.updateUser = function(database, userID, userKey, userValue) {
   var tempObj = {};
   for(var i = 2; i < arguments.length; i = i+2) {
     tempObj[arguments[i]] = arguments[i+1];
@@ -13,10 +12,7 @@ var updateUser = function(database, userID, userKey, userValue) {
   database.child(userID).update(tempObj);
 }
 
-exports.updateUser = updateUser;
-
-
-var createNewUser = function(database, userID) {
+exports.createNewUser = function(database, userID) {
   database.child(userID).set({
     name: null,
     age: null,
@@ -35,9 +31,7 @@ var createNewUser = function(database, userID) {
   });
 }
 
-exports.createNewUser = createNewUser;
-
-var checkValid = function(input, type) {
+exports.checkValid = function(input, type) {
   if(type === "name") return validator.isLength(input, {min:1, max:25});
   else if(type === "age") return validator.isInt(input, {min:1, max:100});
   else if(type === "gender") return validator.isIn(input, ['M', 'F', 'm', 'f']);
@@ -45,5 +39,3 @@ var checkValid = function(input, type) {
   else if(type === "time") return (validator.matches(input, /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
   else return false;
 }
-
-exports.checkValid = checkValid;
