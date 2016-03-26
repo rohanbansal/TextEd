@@ -14,7 +14,7 @@ var es = {
   invalidTime: "Esp: Sorry, please send your preferred time in the format \"hh:mm am/pm\".  Please try again, or send DECLINE to skip.",
   registrationComplete: "Esp: Thank you - your registration is complete!",
   takenMedication: "Esp: Congratulations!  Keep taking your medication.",
-  missedMedication: "Esp: I'm sorry - any reason you didn't take your medication today?"
+  missedMedication: "Esp: I'm sorry - any reason you didn't take your medication today?",
   helpMeMsg: "Esp:  Help message."
 };
 
@@ -46,7 +46,7 @@ var en = {
   invalidTime: "Sorry, please send your preferred time in the format \"hh:mm am/pm\".  Please try again, or send DECLINE to skip.",
   registrationComplete: "Thank you - your registration is complete!",
   takenMedication: "Congratulations!  Keep taking your medication.",
-  missedMedication: "I'm sorry - any reason you didn't take your medication today?"
+  missedMedication: "I'm sorry - any reason you didn't take your medication today?",
   helpMeMsg: "Help message."
 };
 

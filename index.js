@@ -22,7 +22,7 @@ var accountSid = 'AC6a81927144f093104da4c55719686ca8';
 var authToken = '8f867cee5898249629bc247bac039b70';
 var twilio = require('twilio');
 var client = twilio(accountSid, authToken);
-var fromNumber = "+17183952719";
+var fromNumber = ["+17183952719", "+16096513230"];
 
 //Firebase Database Access
 var Firebase = require('firebase');
@@ -53,6 +53,7 @@ app.post('/message', function (req, res) {
   var resp = new twilio.TwimlResponse();
   var fromMsg = req.body.Body.trim();
   var patientID = req.body.From;
+  var twilioNum = req.body.To;
   var localeString = textedStrings.en;
 
   var beganRegistration = (usersDB[patientID] != null); //User at least began registration
@@ -68,6 +69,8 @@ app.post('/message', function (req, res) {
   if(!beganRegistration) {
     resp.message(localeString.newUser);
     textedHelpers.createNewUser(usersRef, patientID);
+
+    textedHelpers.updateUser(usersRef, patientID, 'associatedTwilioNum', twilioNum);
   }
 
   // Unsubscribe functionality
@@ -163,6 +166,8 @@ app.post('/message', function (req, res) {
   res.writeHead(200, {
     'Content-Type':'text/xml'
   });
+  console.log("Response String: ");
+  console.log(resp.toString());
   res.end(resp.toString());
 });
 
@@ -205,16 +210,20 @@ var textJob = new cronJob( '* * * * *', function() {
     if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
     else localeString = textedStrings.en;
 
-    client.messages.create({
-      body: localeString.reminderMsg(usersDB[patientID]),
+
+
+
+    client.sendMessage({
       to: patientID,
-      from: fromNumber
+      from: usersDB[patientID].associatedTwilioNum,
+      body: localeString.reminderMsg(usersDB[patientID])
     }, function(err, message) {
       if(err) {console.log(error.message);}
     });
   }
 
 }, null, true);
+
 
 
 //Set Up Port Listening

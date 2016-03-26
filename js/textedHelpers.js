@@ -27,13 +27,14 @@ exports.createNewUser = function(database, userID) {
     satisfaction: null,
     donotsend: false,
     registrationStep: "name", //[name, age, gender, zipcode, time, complete]
-    preferredLanguage: "en"
+    preferredLanguage: "en",
+    associatedTwilioNum: null
   });
 }
 
 exports.checkValid = function(input, type) {
   if(type === "name") return validator.isLength(input, {min:1, max:25});
-  else if(type === "age") return validator.isInt(input, {min:1, max:100});
+  else if(type === "age") return validator.isInt(input, {min:18, max:100});
   else if(type === "gender") return validator.isIn(input, ['M', 'F', 'm', 'f']);
   else if(type === "zipcode") return (validator.isLength(input, {min:5, max:5}) && validator.isNumeric(input));
   else if(type === "time") return (validator.matches(input, /^(0?[1-9]|1[0-2]):[0-5][0-9]\s*[ap]m$/i));
