@@ -18,4 +18,6 @@ heroku logs --tail
 
 Rebasing:
 
+git log origin/master..master
+
 git rebase -i origin/master --> git push

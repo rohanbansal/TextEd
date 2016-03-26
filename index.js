@@ -17,7 +17,6 @@ app.use(bodyParser.urlencoded({
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-
 //Twilio Account Details
 var accountSid = 'AC6a81927144f093104da4c55719686ca8';
 var authToken = '8f867cee5898249629bc247bac039b70';
@@ -43,7 +42,7 @@ app.get('/', function(request, response) {
 });
 
 //Playground testing
-
+console.log("squash 3");
 
 //What Happens when you receive a message
 app.post('/message', function (req, res) {
