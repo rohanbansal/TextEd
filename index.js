@@ -1,3 +1,9 @@
+/**
+* @file Main file for TextEd.
+* @author Rohan Bansal
+*
+**/
+
 //Initialize and set up app
 var express = require('express');
 var app = express();
@@ -22,6 +28,8 @@ var accountSid = 'AC6a81927144f093104da4c55719686ca8';
 var authToken = '8f867cee5898249629bc247bac039b70';
 var twilio = require('twilio');
 var client = twilio(accountSid, authToken);
+
+//List of all numbers owned on Twilio
 var fromNumbers = ["+17183952719", "+17183952719"];
 
 //Firebase Database Access
@@ -33,7 +41,7 @@ var usersDB = {};  //Local copy of database
 //Setup CronJob
 var cronJob = require('cron').CronJob;
 var moment = require('moment');
-
+var timeFormat = "MMM DD, hh:mm a";
 
 
 //Home Page View
@@ -42,10 +50,10 @@ app.get('/', function(request, response) {
 });
 
 
-/*
+/**
 Request to join TextEd.
 Content-Type: application/x-www-form-urlencoded
-phoneNumber: 10 digit number, no spaces.
+@param phoneNumber: 10 digit number, no spaces.
 */
 app.post('/join', function(req, res) {
   var phoneNumber = req.body.phoneNumber;
@@ -74,12 +82,10 @@ app.post('/join', function(req, res) {
   res.redirect('/');
 });
 
-//Playground testing
 
-//What Happens when you receive a message
+//Receiving Text Message
 app.post('/message', function (req, res) {
 
-  //TODO implement 1/0 med aherence functionality
   //TODO implement no response counter
   //TODO implement re-email if hanging registration
 
@@ -102,7 +108,6 @@ app.post('/message', function (req, res) {
   if(!beganRegistration) {
     resp.message(localeString.newUser);
     textedHelpers.createNewUser(usersRef, patientID);
-
     textedHelpers.updateUser(usersRef, patientID, 'associatedTwilioNum', twilioNum);
   }
 
@@ -143,7 +148,7 @@ app.post('/message', function (req, res) {
         var validName = textedHelpers.checkValid(fromMsg, "name");
         if(!validName) resp.message(localeString.invalidName);
         else {
-          resp.message(localeString.ageRegistration(fromMsg)); //FIXME
+          resp.message(localeString.ageRegistration(fromMsg));
           textedHelpers.updateUser(usersRef, patientID, 'name', fromMsg, 'registrationStep', 'age');
         }
       }
@@ -201,23 +206,21 @@ app.post('/message', function (req, res) {
   }
 
   // Respond with user's next reminder with any other message
-  else if (completedRegistration){
-    resp.message(localeString.nextReminderMsg(usersDB[patientID]));
-  }
+  else if (completedRegistration) resp.message(localeString.nextReminderMsg(usersDB[patientID]));
+
+  else res.message("Sorry, we did not understand that message.  Please contact us for more information.");
 
   textedHelpers.updateUser(usersRef, patientID, 'totalSent', usersDB[patientID].totalSent + 1);
 
   res.writeHead(200, {
     'Content-Type':'text/xml'
   });
-  console.log("Response String: ");
-  console.log(resp.toString());
   res.end(resp.toString());
 });
 
 
 
-// Log every time the database is changed
+// Function called every time database is changed.
 usersRef.on("value", function(snapshot) {
   usersDB = snapshot.val();
   if(snapshot.val() == null) usersDB = {};
@@ -226,29 +229,25 @@ usersRef.on("value", function(snapshot) {
 });
 
 
-//Cronjob every minute
+//Run Cronjob every minute to send reminders that are due
 var textJob = new cronJob( '* * * * *', function() {
 
   console.log("sending Messages.");
 
   for (var patientID in usersDB) {
-
     //Has their reminder time passed? If not, then don't send a message.
-    var reminderTime = moment(usersDB[patientID].nextReminder, textedStrings.timeFormat);
-    var currentTime = moment();
-    currentTime.subtract(4, 'h'); //UTC Offset.  TODO: FIX time zone issues.
-    //console.log("Loop Current Time: " + currentTime.format(timeFormat));
+    var reminderTime = moment(usersDB[patientID].nextReminder, timeFormat);
+    var currentTime = moment().subtract(4, 'h'); //UTC Offset.  FIXME: FIX time zone issues.
 
     if( !(currentTime.isAfter(reminderTime))  || //patient's reminder is for later
     !(usersDB[patientID].registrationStep === "complete") || //patient has not finished registration
     usersDB[patientID].donotsend) continue;  //patient does not message
 
-    //check adherence database - did they respond yesterday?
-
+    //TODO check adherence database - did they respond yesterday?
 
     //Update reminder to next day, and increment totalSent
     reminderTime.add(1, 'days');
-    textedHelpers.updateUser(usersRef, patientID, 'nextReminder', reminderTime.format(textedStrings.timeFormat), 'totalSent', usersDB[patientID].totalSent + 1);
+    textedHelpers.updateUser(usersRef, patientID, 'nextReminder', reminderTime.format(timeFormat), 'totalSent', usersDB[patientID].totalSent + 1);
 
     //Send Message
     if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
@@ -263,9 +262,7 @@ var textJob = new cronJob( '* * * * *', function() {
     });
 
   }
-
 }, null, true);
-
 
 
 //Set Up Port Listening

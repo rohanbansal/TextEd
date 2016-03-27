@@ -1,9 +1,19 @@
+/**
+* @file Helper functions for TextEd.
+* @author Rohan Bansal
+*
+**/
+
 var moment = require('moment');
 var textedStrings = require('./textedStrings');
-
-//Initialize Validator for registration setup
 var validator = require('validator');
 
+var defaultReminderTime = "08:00 am";
+
+/**
+* @function updateUser
+* @summary Updates the user's information in the database with {userKey: userValue}
+*/
 exports.updateUser = function(database, userID, userKey, userValue) {
   var tempObj = {};
   for(var i = 2; i < arguments.length; i = i+2) {
@@ -12,6 +22,10 @@ exports.updateUser = function(database, userID, userKey, userValue) {
   database.child(userID).update(tempObj);
 }
 
+/**
+* @function createNewUser
+* @summary creates a new user in database with the specified userID (phone number)
+*/
 exports.createNewUser = function(database, userID) {
   database.child(userID).set({
     name: null,
@@ -32,6 +46,10 @@ exports.createNewUser = function(database, userID) {
   });
 }
 
+/**
+* @function checkValid
+* @summary Checks to see in input is valid
+*/
 exports.checkValid = function(input, type) {
   if(type === "name") return validator.isLength(input, {min:1, max:25});
   else if(type === "age") return validator.isInt(input, {min:18, max:100});
