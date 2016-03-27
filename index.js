@@ -52,6 +52,7 @@ app.post('/join', function(req, res) {
   var resp;
   var userNum = "+1" + phoneNumber;
 
+  console.log(userNum);
   //Already started registration process
   if(usersDB[userNum] != null) resp = "Already registered!";
   else {
@@ -70,7 +71,7 @@ app.post('/join', function(req, res) {
 
     resp = "Now you're signed up!";
   }
-  res.end(resp);
+  res.redirect('/');
 });
 
 //Playground testing
