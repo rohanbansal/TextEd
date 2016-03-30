@@ -24,8 +24,8 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
 //Twilio Account Details
-var accountSid = 'AC6a81927144f093104da4c55719686ca8';
-var authToken = '8f867cee5898249629bc247bac039b70';
+var accountSid = process.env.TWILIO_ACCOUNT_SID;
+var authToken = process.env.TWILIO_AUTH_TOKEN;
 var twilio = require('twilio');
 var client = twilio(accountSid, authToken);
 
@@ -33,9 +33,10 @@ var client = twilio(accountSid, authToken);
 var fromNumbers = ["+17183952719", "+17183952719"];
 
 //Firebase Database Access
+var DBSTRING = process.env.DB_URL;
 var Firebase = require('firebase');
-var usersRef = new Firebase('dazzling-fire-2240.firebaseio.com/Users/');
-var adherenceRef = new Firebase('dazzling-fire-2240.firebaseio.com/Adherence/');
+var usersRef = new Firebase(DBSTRING + "Users/");
+var adherenceRef = new Firebase(DBSTRING + "Adherence/");
 var usersDB = {};  //Local copy of database
 
 //Setup CronJob
