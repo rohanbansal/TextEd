@@ -35,14 +35,17 @@ var fromNumbers = ["+17183952719", "+17183952719"];
 //Firebase Database Access
 var DBSTRING = process.env.DB_URL;
 var Firebase = require('firebase');
-var usersRef = new Firebase(DBSTRING + "Users/");
+var usersRef = new Firebase("texted.firebaseio.com/Users/");
 var adherenceRef = new Firebase(DBSTRING + "Adherence/");
 var usersDB = {};  //Local copy of database
+
+
 
 //Setup CronJob
 var cronJob = require('cron').CronJob;
 var moment = require('moment');
 var timeFormat = "MMM DD, hh:mm a";
+
 
 
 //Home Page View
