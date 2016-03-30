@@ -58,3 +58,8 @@ exports.checkValid = function(input, type) {
   else if(type === "time") return (validator.matches(input, /^(0?[1-9]|1[0-2]):?[0-5][0-9]\s*[ap]m$/i));
   else return false;
 }
+
+exports.validNumber = function(input) {
+  if( validator.isLength(input, {min:10, max:10}) && validator.isInt(input)) return true;
+  else return false;
+}

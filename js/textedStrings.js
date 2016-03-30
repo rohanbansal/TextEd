@@ -22,7 +22,8 @@ var en = {
   missedMedication: "I'm sorry - any reason you didn't take your medication today?",
   helpMeMsg: "Help message.",
   noRegistrationResponse: "TextEd is your partner in taking care of your health. Would you still like our help? If so, please reply back with START. If not, respond HALT.",
-  unsubscribeMsg: "We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN."
+  unsubscribeMsg: "We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN.",
+  resubscribeMsg: "Welcome back to TextEd!"
 };
 
 en.registrationComplete = function(name, time) {

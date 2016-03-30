@@ -61,29 +61,32 @@ Content-Type: application/x-www-form-urlencoded
 */
 app.post('/join', function(req, res) {
   var phoneNumber = req.body.phoneNumber;
-  var resp;
   var userNum = "+1" + phoneNumber;
 
   console.log(userNum);
-  //Already started registration process
-  if(usersDB[userNum] != null) resp = "Already registered!";
-  else {
-    var randomTwilioNum = fromNumbers[Math.floor(Math.random()*fromNumbers.length)];
-    console.log("sending from: " + randomTwilioNum);
-    textedHelpers.createNewUser(usersRef, userNum);
-    textedHelpers.updateUser(usersRef, userNum, 'associatedTwilioNum', randomTwilioNum);
-
-    client.sendMessage({
-      to: userNum,
-      from: randomTwilioNum,
-      body: textedStrings.en.newUser
-    }, function(err, message) {
-      if(err) {console.log(err.message);}
-    });
-
-    resp = "Now you're signed up!";
+  if(!textedHelpers.validNumber(phoneNumber)) {
+    res.redirect('http://textedhealth.com/failure');
   }
-  res.redirect('/');
+
+  else {
+    //Already started registration process
+    if(usersDB[userNum] != null) res.redirect('http://textedhealth.com/alreadyregistered')
+    else {
+      var randomTwilioNum = fromNumbers[Math.floor(Math.random()*fromNumbers.length)];
+      console.log("sending from: " + randomTwilioNum);
+      textedHelpers.createNewUser(usersRef, userNum);
+      textedHelpers.updateUser(usersRef, userNum, 'associatedTwilioNum', randomTwilioNum);
+
+      client.sendMessage({
+        to: userNum,
+        from: randomTwilioNum,
+        body: textedStrings.en.newUser
+      }, function(err, message) {
+        if(err) {console.log(err.message);}
+      });
+    }
+    res.redirect('http://textedhealth.com/congrats');
+  }
 });
 
 //Receiving Text Message
@@ -91,9 +94,7 @@ app.post('/message', function (req, res) {
 
   //TODO implement no response counter - 3 and 24 hours
   //TODO implement re-email if hanging registration
-  //TODO implement "begin" after "halt"
   //TODO update timeFormat
-  //TODO skipping steps
   //TODO help --> spanish
 
   var resp = new twilio.TwimlResponse();
@@ -136,10 +137,15 @@ app.post('/message', function (req, res) {
     textedHelpers.updateUser(usersRef, patientID, "donotsend", true);
   }
 
-  // Help functionality
-  else if(beganRegistration && fromMsg.toLowerCase() === "helpme") {
+  // Help functionality TODO add functionality
+  else if(beganRegistration && fromMsg.toLowerCase() === "assist") {
     resp.message(localeString.helpMeMsg);
-    textedHelpers.updateUser(usersRef, patientID, "donotsend", true);
+  }
+
+  //Restarting after unsubscribing TODO add functionality
+  else if(usersDB[donotsend]) {
+    resp.message(localeString.resubscribeMsg);
+    textedHelpers.updateUser(usersRef, patientID, "donotsend", false);
   }
 
   // Continue Registration
