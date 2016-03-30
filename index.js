@@ -35,7 +35,7 @@ var fromNumbers = ["+17183952719", "+17183952719"];
 //Firebase Database Access
 var DBSTRING = process.env.DB_URL;
 var Firebase = require('firebase');
-var usersRef = new Firebase("texted.firebaseio.com/Users/");
+var usersRef = new Firebase(DBSTRING + "Users/");
 var adherenceRef = new Firebase(DBSTRING + "Adherence/");
 var usersDB = {};  //Local copy of database
 
