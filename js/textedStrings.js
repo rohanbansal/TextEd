@@ -22,16 +22,22 @@ var en = {
   missedMedication: "I'm sorry - any reason you didn't take your medication today?",
   helpMeMsg: "Help message.",
   noRegistrationResponse: "TextEd is your partner in taking care of your health. Would you still like our help? If so, please reply back with START. If not, respond HALT.",
-  unsubscribeMsg: "We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN.",
-  resubscribeMsg: "Welcome back to TextEd!"
+  unsubscribeMsg: "We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN."
 };
+
+en.initialResubscribeMsg = function(user) {
+  var resp = "Hello " + user.name + ", welcome back! Would you like to review your account details? Reply YES or NO.";
+  return resp;
+}
+
+en.noConfirmResubscribe = function(user) {
+  return ("Great! We are glad to have you back. Your next reminder is: " + user.nextReminder);
+}
 
 en.registrationComplete = function(name, time) {
   var resp = "Thanks " + name + ". You will now receive a daily medication reminder at " + time + ".";
   return resp;
 }
-
-en.regCompletion = "hello";
 
 en.ageRegistration = function(name) {
   var msg;
@@ -50,6 +56,10 @@ en.reminderMsg = function(user) {
 en.midRegistrationConfirmation = function(name, age, gender, zipcode) {
   //TODO different messages for null values
   var resp = "Thanks " + Name + ". Let us make sure we have this all correct.  You are a " + age + " year-old who lives near " + zipcode + ". Is that correct? Please respond YES or NO.";
+}
+
+en.missedDosesAlertMsg = function(user) {
+  return ("Hello " + user.name + ", we haven't heard from you in a few days.  We wanted to make sure everything is okay with your medicine.  Reply 1 if everything is okay or HELP for help.");
 }
 
 en.hello = "abc";

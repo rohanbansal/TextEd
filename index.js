@@ -130,6 +130,13 @@ app.post('/message', function (req, res) {
     return;
   }
 
+
+
+  // Help functionality TODO add functionality
+  else if(beganRegistration && fromMsg.toLowerCase() === "assist") {
+    resp.message(localeString.helpMeMsg);
+  }
+
   // Unsubscribe functionality
   //TODO implement "begin" to restart texting
   else if(beganRegistration && fromMsg.toLowerCase() === "halt") {
@@ -137,15 +144,22 @@ app.post('/message', function (req, res) {
     textedHelpers.updateUser(usersRef, patientID, "donotsend", true);
   }
 
-  // Help functionality TODO add functionality
-  else if(beganRegistration && fromMsg.toLowerCase() === "assist") {
-    resp.message(localeString.helpMeMsg);
-  }
-
   //Restarting after unsubscribing TODO add functionality
-  else if(usersDB[donotsend]) {
-    resp.message(localeString.resubscribeMsg);
-    textedHelpers.updateUser(usersRef, patientID, "donotsend", false);
+  else if(usersDB[patientID].donotsend) {
+    if(usersDB[patientID].registrationStep == "complete") {
+      resp.message(localeString.initialResubscribeMsg(usersDB[patientID]));
+      textedHelpers.updateUser(usersRef, patientID, "registrationStep", 'resubscribe');
+    }
+    else if (usersDB[patientID].registrationStep == "resubscribe" && fromMsg.toLowerCase() === "yes") {
+
+    }
+    else if (usersDB[patientID].registrationStep == "confirmResubscribe") {
+
+    }
+    else if (usersDB[patientID].registrationStep == "resubscribe")  {
+      resp.message(localeString.noConfirmResubscribe(usersDB[patientID]));
+      textedHelpers.updateUser(usersRef, patientID, "donotsend", false);
+    }
   }
 
   // Continue Registration
@@ -229,9 +243,10 @@ app.post('/message', function (req, res) {
 
   //Adherence Message
   else if (completedRegistration && (fromMsg === "1" || fromMsg === "0")){
-    var dateAdherence = {};
-    dateAdherence[moment().subtract(4, 'h').add(1, 'd').format("MMM DD, YYYY")] = fromMsg;
-    textedHelpers.updateUser(adherenceRef, patientID, moment().subtract(4, 'h').format("MMM DD, YYYY"), fromMsg);
+    textedHelpers.updateUser(adherenceRef, patientID, textedHelpers.dateToday(), fromMsg);
+    if(usersDB[patientID].numMissedDoses > 0) {
+      textedHelpers.updateUser(usersRef, patientID, 'numMissedDoses', 0, 'MISSED_DOSES_ALERT_MSG_FLAG', false);
+    }
     if(fromMsg === "1") resp.message(localeString.takenMedication);
     else if (fromMsg === "0") resp.message(localeString.missedMedication);
   }
@@ -261,6 +276,27 @@ usersRef.on("value", function(snapshot) {
   console.log("The read failed: " + errorObject.code)
 });
 
+//Check daily to see if people responded today to adherence database @ 12:01AM
+var adherenceJob = new cronJob( '1 4 * * *', function() { //FIXME date/time issue
+  adherenceRef.once("value", function(snapshot) {
+    console.log("Checking Adherence patterns: ");
+    var adherenceDB = snapshot.val();
+    for(var patientID in adherenceDB) {
+      if(adherenceDB[patientID][textedHelpers.dateYesterday()] == '1') {
+        textedHelpers.updateUser(usersRef, patientID, 'missedDoseCounter', 0, 'MISSED_DOSES_ALERT_MSG_FLAG', false);
+        continue;
+      }
+      else {
+        if (usersDB[patientID].missedDoseCounter == 2) { //Send out message on day 3 of missed dose
+          textedHelpers.updateUser(usersRef, patientID, 'MISSED_DOSES_ALERT_MSG_FLAG', true, 'missedDoseCounter', usersDB[patientID].missedDoseCounter + 1);
+        }
+        else {
+          textedHelpers.updateUser(usersRef, patientID, 'missedDoseCounter', usersDB[patientID].missedDoseCounter + 1);
+        }
+      }
+    }
+  });
+}, null, true);
 
 //Run Cronjob every minute to send reminders that are due
 var textJob = new cronJob( '* * * * *', function() {
@@ -276,22 +312,33 @@ var textJob = new cronJob( '* * * * *', function() {
     !(usersDB[patientID].registrationStep === "complete") || //patient has not finished registration
     usersDB[patientID].donotsend) continue;  //patient does not message
 
-    //TODO check adherence database - did they respond yesterday?
+    if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
+    else localeString = textedStrings.en;
 
+    var resp = "";
+
+    //TODO check adherence database - did they respond yesterday?
+    console.log("Patient Info: ");
+    console.log(usersDB[patientID]);
+    if(usersDB[patientID].MISSED_DOSES_ALERT_MSG_FLAG) { //Send Missed Dose Alert Message
+      resp = localeString.missedDosesAlertMsg(usersDB[patientID]);
+      textedHelpers.updateUser(usersRef, patientID, 'MISSED_DOSES_ALERT_MSG_FLAG', false);
+    }
+    else {
+      resp = localeString.reminderMsg(usersDB[patientID]);
+    }
     //Update reminder to next day, and increment totalSent
     reminderTime.add(1, 'days');
     textedHelpers.updateUser(usersRef, patientID, 'nextReminder', reminderTime.format(timeFormat), 'totalSent', usersDB[patientID].totalSent + 1);
 
     //Send Message
-    if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
-    else localeString = textedStrings.en;
 
     client.sendMessage({
       to: patientID,
       from: usersDB[patientID].associatedTwilioNum,
-      body: localeString.reminderMsg(usersDB[patientID])
+      body: resp
     }, function(err, message) {
-      if(err) {console.log(error.message);}
+      if(err) {console.log(err.message);}
     });
 
   }

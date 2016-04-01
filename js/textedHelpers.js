@@ -63,3 +63,11 @@ exports.validNumber = function(input) {
   if( validator.isLength(input, {min:10, max:10}) && validator.isInt(input)) return true;
   else return false;
 }
+
+exports.dateToday = function() {
+  return moment().subtract(4, 'h').format("MMM DD, YYYY");
+}
+
+exports.dateYesterday = function() {
+  return moment().subtract(4, 'h').subtract(1,'d').format("MMM DD, YYYY");
+}
