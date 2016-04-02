@@ -4,6 +4,7 @@
 *
 **/
 
+exports.registrationSkipTxt = "skip";
 
 
 /** @constant English object containing all phrases. */
@@ -25,6 +26,13 @@ var en = {
   unsubscribeMsg: "We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN."
 };
 
+en.ageRegistration = function(name) {
+  var msg;
+  if (name == null) msg = "Hello! Hold old are you? Please respond with a number (like 23 or 67).";
+  else msg = "Hello  " + name + ". How old are you? Please respond with a number (like 23 or 67).";
+  return (msg);
+}
+
 en.initialResubscribeMsg = function(user) {
   var resp = "Hello " + user.name + ", welcome back! Would you like to review your account details? Reply YES or NO.";
   return resp;
@@ -34,17 +42,12 @@ en.noConfirmResubscribe = function(user) {
   return ("Great! We are glad to have you back. Your next reminder is: " + user.nextReminder);
 }
 
-en.registrationComplete = function(name, time) {
-  var resp = "Thanks " + name + ". You will now receive a daily medication reminder at " + time + ".";
+en.registrationComplete = function(user) {
+  var resp = "Thanks " + user.name + ". You will now receive a daily medication reminder, and your next one is: " + user.nextReminder;
   return resp;
 }
 
-en.ageRegistration = function(name) {
-  var msg;
-  if (name == null) msg = "Hello! Hold old are you? Please respond with a number (like 23 or 67).";
-  else msg = "Hello  " + name + ". How old are you? Please respond with a number (like 23 or 67).";
-  return (msg);
-}
+
 
 en.nextReminderMsg = function(user) {
   return ("Hello " + user.name + "! Your next reminder is: " + user.nextReminder);
@@ -53,9 +56,11 @@ en.nextReminderMsg = function(user) {
 en.reminderMsg = function(user) {
    return ("Hello " + user.name + " - please remember to take your medication today! Reply with 1 after you have taken your medication.");
 }
-en.midRegistrationConfirmation = function(name, age, gender, zipcode) {
+
+en.registrationConfirmation = function(user) {
   //TODO different messages for null values
-  var resp = "Thanks " + Name + ". Let us make sure we have this all correct.  You are a " + age + " year-old who lives near " + zipcode + ". Is that correct? Please respond YES or NO.";
+  var resp = "Thanks " + user.name + ". Let us make sure we have this all correct.  Age: " + user.age + "\nZip Code: " + user.zipcode + "\nNext reminder: " + user.nextReminder + "\nIf everything looks ok, text OK.  Otherwise, text RESTART to start the registration process again.";
+  return resp;
 }
 
 en.missedDosesAlertMsg = function(user) {
@@ -88,4 +93,3 @@ es.reminderMsg = function(user) { return ("Esp: Hello " + user.name + " - please
 
 exports.en = en;
 exports.es = es;
-exports.registrationSkipTxt = "skip";

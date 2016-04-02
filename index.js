@@ -40,11 +40,20 @@ var adherenceRef = new Firebase(DBSTRING + "Adherence/");
 var usersDB = {};  //Local copy of database
 
 
-
 //Setup CronJob
 var cronJob = require('cron').CronJob;
 var moment = require('moment');
 var timeFormat = "MMM DD, hh:mm a";
+
+
+// Function called every time database is changed.
+usersRef.on("value", function(snapshot) {
+  usersDB = snapshot.val();
+  if(snapshot.val() == null) usersDB = {};
+}, function (errorObject) {
+  console.log("The read failed: " + errorObject.code)
+});
+
 
 
 
@@ -151,14 +160,22 @@ app.post('/message', function (req, res) {
       textedHelpers.updateUser(usersRef, patientID, "registrationStep", 'resubscribe');
     }
     else if (usersDB[patientID].registrationStep == "resubscribe" && fromMsg.toLowerCase() === "yes") {
-
+      resp.message(localeString.registrationConfirmation(usersDB[patientID]));
+      textedHelpers.updateUser(usersRef, patientID, "registrationStep", 'confirmResubscribe');
     }
     else if (usersDB[patientID].registrationStep == "confirmResubscribe") {
-
+      if(fromMsg.toLowerCase() === "restart") {
+        resp.message(localeString.nameRegistration);
+        textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
+      }
+      else {
+        resp.message(localeString.noConfirmResubscribe(usersDB[patientID]));
+        textedHelpers.updateUser(usersRef, patientID, "donotsend", false);
+      }
     }
     else if (usersDB[patientID].registrationStep == "resubscribe")  {
       resp.message(localeString.noConfirmResubscribe(usersDB[patientID]));
-      textedHelpers.updateUser(usersRef, patientID, "donotsend", false);
+      textedHelpers.updateUser(usersRef, patientID, "donotsend", false, 'registrationStep', 'complete');
     }
   }
 
@@ -233,10 +250,20 @@ app.post('/message', function (req, res) {
       if(!validTime && !validAMAppendTime) resp.message(localeString.invalidTime);
       else {
         if(!validTime) fromMsg = fromMsg + "am";  // assume AM reminder
-        resp.message(localeString.registrationComplete(usersDB[patientID].name, fromMsg));
 
         var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg; //TODO update to add 1 day so reminders start tomorrow
-        textedHelpers.updateUser(usersRef, patientID, 'nextReminder', newNextReminder, 'registrationStep', 'complete');
+        textedHelpers.updateUser(usersRef, patientID, 'nextReminder', newNextReminder, 'registrationStep', 'confirmation');
+        resp.message(localeString.registrationConfirmation(usersDB[patientID]));
+      }
+    }
+    else if(usersDB[patientID].registrationStep === "confirmation") {
+      if(fromMsg.toLowerCase() === "restart") {
+        resp.message(localeString.nameRegistration);
+        textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
+      }
+      else {
+        resp.message(localeString.registrationComplete(usersDB[patientID]));
+        textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'complete');
       }
     }
   }
