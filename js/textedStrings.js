@@ -59,7 +59,7 @@ en.reminderMsg = function(user) {
 
 en.registrationConfirmation = function(user) {
   //TODO different messages for null values
-  var resp = "Thanks " + user.name + ". Let us make sure we have this all correct.  Age: " + user.age + "\nZip Code: " + user.zipcode + "\nNext reminder: " + user.nextReminder + "\nIf everything looks ok, text OK.  Otherwise, text RESTART to start the registration process again.";
+  var resp = "Thanks " + user.name + ". Let us make sure we have this all correct.  \nAge: " + user.age + "\nZip Code: " + user.zipcode + "\nNext reminder: " + user.nextReminder + "\nIf everything looks ok, text OK.  Otherwise, text RESTART to start the registration process again.";
   return resp;
 }
 

@@ -30,8 +30,8 @@ var twilio = require('twilio');
 var client = twilio(accountSid, authToken);
 
 //List of all numbers owned on Twilio
-if(process.env.ENVIRONMENT_TYPE === "PRODUCTION" ) var fromNumbers = ["+17183952719", "+17183952719"];
-else var fromNumbers = ["+13473292329", "+13473292329"];
+if(textedHelpers.prodEnvironment()) var fromNumbers = ["+13473292329", "+13473292329"];
+else var fromNumbers = ["+17183952719", "+17183952719"];
 
 //Firebase Database Access
 var DBSTRING = process.env.DB_URL;
@@ -130,7 +130,7 @@ app.post('/message', function (req, res) {
   }
 
   //FIXME:  remove.  temporary to delete record from DB.
-  else if(beganRegistration && fromMsg.toLowerCase() === "remove") {
+  else if(!textedHelpers.prodEnvironment() && beganRegistration && fromMsg.toLowerCase() === "remove") {
     resp.message("Removed from database.");
     usersRef.child(patientID).remove();
     res.writeHead(200, {

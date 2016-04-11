@@ -71,3 +71,9 @@ exports.dateToday = function() {
 exports.dateYesterday = function() {
   return moment().subtract(4, 'h').subtract(1,'d').format("MMM DD, YYYY");
 }
+
+exports.prodEnvironment = function() {
+  if(process.env.ENVIRONMENT_TYPE === "PRODUCTION" ) return true;
+  else return false;
+
+}
