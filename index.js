@@ -45,7 +45,7 @@ var usersDB = {};  //Local copy of database
 var cronJob = require('cron').CronJob;
 var moment = require('moment');
 var timeFormat = "MMM DD, hh:mm a";
-
+var tempTimeFomat = "MMM DD, hmm a";
 
 // Function called every time database is changed.
 usersRef.on("value", function(snapshot) {
@@ -251,9 +251,16 @@ app.post('/message', function (req, res) {
       if(!validTime && !validAMAppendTime) resp.message(localeString.invalidTime);
       else {
         if(!validTime) fromMsg = fromMsg + "am";  // assume AM reminder
-
         var newNextReminder = moment().subtract(4, 'h').format("MMM DD, ") + fromMsg; //TODO update to add 1 day so reminders start tomorrow
-        textedHelpers.updateUser(usersRef, patientID, 'nextReminder', newNextReminder, 'registrationStep', 'confirmation');
+
+        if(fromMsg.indexOf(':') === -1) {
+          var tempTime = moment(newNextReminder, tempTimeFomat);
+          var correctedNextReminder = tempTime.format(timeFormat);
+        }
+        else {
+          var correctedNextReminder = newNextReminder;
+        }
+        textedHelpers.updateUser(usersRef, patientID, 'nextReminder', correctedNextReminder, 'registrationStep', 'confirmation');
         resp.message(localeString.registrationConfirmation(usersDB[patientID]));
       }
     }
@@ -290,7 +297,6 @@ app.post('/message', function (req, res) {
   res.writeHead(200, {
     'Content-Type':'text/xml'
   });
-  console.log("Sending registration message.");
   res.end(resp.toString());
 });
 
@@ -335,6 +341,13 @@ var textJob = new cronJob( '* * * * *', function() {
     //Has their reminder time passed? If not, then don't send a message.
     var reminderTime = moment(usersDB[patientID].nextReminder, timeFormat);
     var currentTime = moment().subtract(4, 'h'); //UTC Offset.  FIXME: FIX time zone issues.
+
+
+    console.log("Current Time: " + currentTime.isAfter(reminderTime));
+    console.log(usersDB[patientID].registrationStep);
+    console.log(usersDB[patientID].donotsend);
+    console.log(currentTime.format());
+    console.log(reminderTime.format());
 
     if( !(currentTime.isAfter(reminderTime))  || //patient's reminder is for later
     !(usersDB[patientID].registrationStep === "complete") || //patient has not finished registration
