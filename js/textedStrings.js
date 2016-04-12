@@ -3,8 +3,8 @@
 * @author Rohan Bansal
 *
 **/
-
-exports.registrationSkipTxt = "skip";
+var moment = require('moment');
+var textedHelpers = require('./textedHelpers');
 
 
 /** @constant English object containing all phrases. */
@@ -21,7 +21,7 @@ var en = {
   invalidTime: "It looks like an error has occurred. Reply with the time you would like your medication reminder like this: 1130 AM or 215 PM.",
   takenMedication: "Congratulations!  Keep taking your medication.",
   missedMedication: "I'm sorry - any reason you didn't take your medication today?",
-  helpMeMsg: "Help message.",
+  helpMeMsg: "To stop your service, text HALT. For help with TextEd, contact team@textedhealth.com. For medical assistance, contact your doctor.", //FIXME Edit message content
   noRegistrationResponse: "TextEd is your partner in taking care of your health. Would you still like our help? If so, please reply back with START. If not, respond HALT.",
   unsubscribeMsg: "We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please text BEGIN."
 };
@@ -39,18 +39,18 @@ en.initialResubscribeMsg = function(user) {
 }
 
 en.noConfirmResubscribe = function(user) {
-  return ("Great! We are glad to have you back. Your next reminder is: " + user.nextReminder);
+  return ("Great! We are glad to have you back. Your next reminder is: " + textedHelpers.nextReminderString(user));
 }
 
 en.registrationComplete = function(user) {
-  var resp = "Thanks " + user.name + ". You will now receive a daily medication reminder, and your next one is: " + user.nextReminder;
+  var resp = "Thanks " + user.name + ". You will now receive a daily medication reminder, and your next one is: " + textedHelpers.nextReminderString(user);
   return resp;
 }
 
 
 
 en.nextReminderMsg = function(user) {
-  return ("Hello " + user.name + "! Your next reminder is: " + user.nextReminder);
+  return ("Hello " + user.name + "! Your next reminder is: " + textedHelpers.nextReminderString(user) + ".  Please text back ASSIST for help.");
 }
 
 en.reminderMsg = function(user) {
@@ -59,13 +59,22 @@ en.reminderMsg = function(user) {
 
 en.registrationConfirmation = function(user) {
   //TODO different messages for null values
-  var resp = "Thanks " + user.name + ". Let us make sure we have this all correct.  \nAge: " + user.age + "\nZip Code: " + user.zipcode + "\nNext reminder: " + user.nextReminder + "\nIf everything looks ok, text OK.  Otherwise, text RESTART to start the registration process again.";
+  var resp = "Thanks " + user.name + ". Let us make sure we have this all correct.  \n";
+  if(user.age) resp = resp + "Age: " + user.age + "\n";
+  if(user.zipcode) resp = resp + "Zip Code: " + user.zipcode + "\n";
+  resp = resp + "Next reminder: " + textedHelpers.nextReminderString(user) + "\nIf everything looks ok, text OK.  Otherwise, text RESTART to start the registration process again.";
   return resp;
 }
 
 en.missedDosesAlertMsg = function(user) {
-  return ("Hello " + user.name + ", we haven't heard from you in a few days.  We wanted to make sure everything is okay with your medicine.  Reply 1 if everything is okay or HELP for help.");
+  return ("Hello " + user.name + ", we haven't heard from you in a few days, and are just checking in.  Reply 1 if everything is okay.  If you need help, contact your doctor.");
 }
+
+
+en.missedDosesAlertMsg = function(user) {
+  return ("Hello " + user.name + ", we haven't heard from you in a long time.  If you'd like to continue receiving messages, reply 1.  If you need help, contact your doctor.");
+}
+
 
 en.hello = "abc";
 

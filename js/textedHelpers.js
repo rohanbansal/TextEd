@@ -8,7 +8,23 @@ var moment = require('moment');
 var textedStrings = require('./textedStrings');
 var validator = require('validator');
 
-var defaultReminderTime = "08:00 am";
+
+
+var displayTimeFormat = "MMM DD, hh:mm a";
+var DBTimeFormat = "hh:mm a, MMM DD, YYYY";
+var inputTimeFormatColon = 'h:mm a';
+var inputTimeFormatNoColon = 'hmm a';
+var registrationSkipTxt = "skip";
+var missedDoseAlertMsgDays = [2, 6, 29, 59];
+
+exports.displayTimeFormat = displayTimeFormat;
+exports.DBTimeFormat = DBTimeFormat;
+exports.inputTimeFormatColon = inputTimeFormatColon;
+exports.inputTimeFormatNoColon = inputTimeFormatNoColon;
+exports.registrationSkipTxt = registrationSkipTxt;
+exports.missedDoseAlertMsgDays = missedDoseAlertMsgDays;
+
+exports.defaultReminderTime = "08:00 am";
 
 /**
 * @function updateUser
@@ -64,12 +80,17 @@ exports.validNumber = function(input) {
   else return false;
 }
 
-exports.dateToday = function() {
-  return moment().subtract(4, 'h').format("MMM DD, YYYY");
+exports.dateMoment = function(offset) {
+  return moment().subtract(4, 'h').add(offset, 'd');
 }
 
-exports.dateYesterday = function() {
-  return moment().subtract(4, 'h').subtract(1,'d').format("MMM DD, YYYY");
+exports.dateString = function(offset) {
+  return moment().subtract(4, 'h').add(offset, 'd').format("MMM DD, YYYY");
+}
+
+exports.nextReminderString = function(user) {
+  var temp = moment(user.nextReminder, DBTimeFormat);
+  return temp.format(displayTimeFormat);
 }
 
 exports.prodEnvironment = function() {
