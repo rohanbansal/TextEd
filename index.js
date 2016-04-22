@@ -146,97 +146,142 @@ app.post('/message', function (req, res) {
   }
 
   //Restarting after unsubscribing
-  else if(usersDB[patientID].registrationStep == "complete") {
-    textedHelpers.updateUser(usersRef, patientID, "registrationStep", 'resubscribe');
-    resp.message(localeString.initialResubscribeMsg(usersDB[patientID]));
-  }
-  else if (usersDB[patientID].registrationStep == "resubscribe" && fromMsg.toLowerCase() === "yes") {
-    textedHelpers.updateUser(usersRef, patientID, "registrationStep", 'confirmResubscribe');
-    resp.message(localeString.registrationConfirmation(usersDB[patientID]));
-  }
-  else if (usersDB[patientID].registrationStep == "resubscribe")  {
-    textedHelpers.updateUser(usersRef, patientID, "donotsend", false, 'registrationStep', 'complete');
-    resp.message(localeString.noConfirmResubscribe(usersDB[patientID]));
-  }
-  else if (usersDB[patientID].registrationStep == "confirmResubscribe") {
-    if(fromMsg.toLowerCase() === "restart") {
-      textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
-      resp.message(localeString.nameRegistration);
+  else if(usersDB[patientID].donotsend) {
+
+    if(usersDB[patientID].registrationStep == "complete") {
+      textedHelpers.updateUser(usersRef, patientID, "registrationStep", 'resubscribe');
+      resp.message(localeString.initialResubscribeMsg(usersDB[patientID]));
     }
-    else {
+    else if (usersDB[patientID].registrationStep == "resubscribe" && fromMsg.toLowerCase() === "yes") {
+      textedHelpers.updateUser(usersRef, patientID, "registrationStep", 'confirmResubscribe');
+      resp.message(localeString.registrationConfirmation(usersDB[patientID]));
+    }
+    else if (usersDB[patientID].registrationStep == "resubscribe")  {
       textedHelpers.updateUser(usersRef, patientID, "donotsend", false, 'registrationStep', 'complete');
       resp.message(localeString.noConfirmResubscribe(usersDB[patientID]));
     }
-  }
-}
-
-// Continue Registration
-else if(beganRegistration && !completedRegistration) {
-
-  //Start Registration
-  if(usersDB[patientID].registrationStep == "start") {
-    //TODO switch newUser to say "Reply espanol for spanish"
-    if(fromMsg.toLowerCase() === "espanol") {  //switch language to spanish
-      localeString = textedStrings.es;
-      resp.message(localeString.newUser);
-      textedHelpers.updateUser(usersRef, patientID, 'preferredLanguage', 'es');
-    }
-    else { //begin registration process with name
-      resp.message(localeString.nameRegistration);
-      textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
+    else if (usersDB[patientID].registrationStep == "confirmResubscribe") {
+      if(fromMsg.toLowerCase() === "restart") {
+        textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
+        resp.message(localeString.nameRegistration);
+      }
+      else {
+        textedHelpers.updateUser(usersRef, patientID, "donotsend", false, 'registrationStep', 'complete');
+        resp.message(localeString.noConfirmResubscribe(usersDB[patientID]));
+      }
     }
   }
 
-  //Register Name
-  else if(usersDB[patientID].registrationStep === "name") {
-    var msg = fromMsg;
-    var validName = textedHelpers.checkValid(fromMsg, "name");
-    if(!validName) resp.message(localeString.invalidName);
-    else {
-      textedHelpers.updateUser(usersRef, patientID, 'name', msg, 'registrationStep', 'age');
-      resp.message(localeString.ageRegistration(usersDB[patientID]));
+  // Continue Registration
+  else if(beganRegistration && !completedRegistration) {
+
+    //Start Registration
+    if(usersDB[patientID].registrationStep == "start") {
+      //TODO switch newUser to say "Reply espanol for spanish"
+      if(fromMsg.toLowerCase() === "espanol") {  //switch language to spanish
+        localeString = textedStrings.es;
+        resp.message(localeString.newUser);
+        textedHelpers.updateUser(usersRef, patientID, 'preferredLanguage', 'es');
+      }
+      else { //begin registration process with name
+        resp.message(localeString.nameRegistration);
+        textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
+      }
+    }
+
+    //Register Name
+    else if(usersDB[patientID].registrationStep === "name") {
+      var msg = fromMsg;
+      var validName = textedHelpers.checkValid(fromMsg, "name");
+      if(!validName) resp.message(localeString.invalidName);
+      else {
+        textedHelpers.updateUser(usersRef, patientID, 'name', msg, 'registrationStep', 'age');
+        resp.message(localeString.ageRegistration(usersDB[patientID]));
+      }
+    }
+
+    //Register Age
+    else if(usersDB[patientID].registrationStep === "age") {
+      var msg = fromMsg;
+      if(fromMsg.toLowerCase() == textedHelpers.registrationSkipTxt) msg = null;
+
+      var validAge = textedHelpers.checkValid(fromMsg, "age");
+      if(!validAge && (msg != null)) resp.message(localeString.invalidAge);
+      else {
+        textedHelpers.updateUser(usersRef, patientID, 'age', msg, 'registrationStep', 'gender');
+        resp.message(localeString.genderRegistration);
+      }
+    }
+
+    //Register Gender
+    else if(usersDB[patientID].registrationStep === "gender") {
+      var msg = fromMsg.toLowerCase();
+      if(msg == textedHelpers.registrationSkipTxt) msg = null;
+
+      var validGender = textedHelpers.checkValid(fromMsg, "gender");
+      if(!validGender && (msg != null)) resp.message(localeString.invalidGender);
+      else {
+        resp.message(localeString.zipcodeRegistration);
+        textedHelpers.updateUser(usersRef, patientID, 'gender', msg, 'registrationStep', 'zipcode');
+      }
+    }
+
+    //Register Zipcode
+    else if(usersDB[patientID].registrationStep === "zipcode") {
+      var msg = fromMsg;
+      if(fromMsg.toLowerCase() == textedHelpers.registrationSkipTxt) msg = null;
+      var validZipcode = textedHelpers.checkValid(fromMsg, "zipcode");
+      if(!validZipcode && (msg != null)) resp.message(localeString.invalidZipcode);
+      else {
+        textedHelpers.updateUser(usersRef, patientID, 'zipcode', msg, 'registrationStep', 'time');
+        resp.message(localeString.preferredTimeRegistration);
+      }
+    }
+
+    else if(usersDB[patientID].registrationStep === "time") {
+      var validTime = textedHelpers.checkValid(fromMsg, "time");
+      var validAMAppendTime = textedHelpers.checkValid(fromMsg + "am", "time");
+      if(!validTime && !validAMAppendTime) resp.message(localeString.invalidTime);
+      else {
+        if(!validTime) fromMsg = fromMsg + " am";  // assume AM reminder
+
+        if(fromMsg.indexOf(':') === -1) var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatNoColon);
+        else var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatColon);
+
+        var nextReminder = textedHelpers.dateMoment(0).hour(inputTimeMoment.hour()).minute(inputTimeMoment.minute()).format(textedHelpers.DBTimeFormat);
+
+        textedHelpers.updateUser(usersRef, patientID, 'nextReminder', nextReminder, 'registrationStep', 'confirmation');
+        resp.message(localeString.registrationConfirmation(usersDB[patientID]));
+      }
+    }
+
+    else if(usersDB[patientID].registrationStep === "confirmation") {
+      if(fromMsg.toLowerCase() === "restart") {
+        resp.message(localeString.nameRegistration);
+        textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
+      }
+      else {
+        resp.message(localeString.registrationComplete(usersDB[patientID]));
+        textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'complete');
+      }
     }
   }
 
-  //Register Age
-  else if(usersDB[patientID].registrationStep === "age") {
-    var msg = fromMsg;
-    if(fromMsg.toLowerCase() == textedHelpers.registrationSkipTxt) msg = null;
-
-    var validAge = textedHelpers.checkValid(fromMsg, "age");
-    if(!validAge && (msg != null)) resp.message(localeString.invalidAge);
-    else {
-      textedHelpers.updateUser(usersRef, patientID, 'age', msg, 'registrationStep', 'gender');
-      resp.message(localeString.genderRegistration);
+  //Adherence Message
+  else if(completedRegistration && (fromMsg === "1")){
+    textedHelpers.updateUser(adherenceRef, patientID, textedHelpers.dateString(0), fromMsg);
+    if(usersDB[patientID].numMissedDoses > 0) {
+      textedHelpers.updateUser(usersRef, patientID, 'numMissedDoses', 0, 'MISSED_DOSES_ALERT_MSG_FLAG', false);
     }
+    if(fromMsg === "1") resp.message(localeString.takenMedication);
   }
 
-  //Register Gender
-  else if(usersDB[patientID].registrationStep === "gender") {
-    var msg = fromMsg.toLowerCase();
-    if(msg == textedHelpers.registrationSkipTxt) msg = null;
-
-    var validGender = textedHelpers.checkValid(fromMsg, "gender");
-    if(!validGender && (msg != null)) resp.message(localeString.invalidGender);
-    else {
-      resp.message(localeString.zipcodeRegistration);
-      textedHelpers.updateUser(usersRef, patientID, 'gender', msg, 'registrationStep', 'zipcode');
-    }
+  else if(completedRegistration && (fromMsg.toLowerCase() === "reminder")) {
+    textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'ChangeReminder');
+    resp.message(localeString.preferredTimeRegistration);
   }
 
-  //Register Zipcode
-  else if(usersDB[patientID].registrationStep === "zipcode") {
-    var msg = fromMsg;
-    if(fromMsg.toLowerCase() == textedHelpers.registrationSkipTxt) msg = null;
-    var validZipcode = textedHelpers.checkValid(fromMsg, "zipcode");
-    if(!validZipcode && (msg != null)) resp.message(localeString.invalidZipcode);
-    else {
-      textedHelpers.updateUser(usersRef, patientID, 'zipcode', msg, 'registrationStep', 'time');
-      resp.message(localeString.preferredTimeRegistration);
-    }
-  }
-
-  else if(usersDB[patientID].registrationStep === "time") {
+  else if(usersDB[patientID].registrationStep == "ChangeReminder") {
     var validTime = textedHelpers.checkValid(fromMsg, "time");
     var validAMAppendTime = textedHelpers.checkValid(fromMsg + "am", "time");
     if(!validTime && !validAMAppendTime) resp.message(localeString.invalidTime);
@@ -246,66 +291,23 @@ else if(beganRegistration && !completedRegistration) {
       if(fromMsg.indexOf(':') === -1) var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatNoColon);
       else var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatColon);
 
-      var nextReminder = textedHelpers.dateMoment(0).hour(inputTimeMoment.hour()).minute(inputTimeMoment.minute()).format(textedHelpers.DBTimeFormat);
+      var nextReminder = textedHelpers.dateMoment(1).hour(inputTimeMoment.hour()).minute(inputTimeMoment.minute()).format(textedHelpers.DBTimeFormat);
 
-      textedHelpers.updateUser(usersRef, patientID, 'nextReminder', nextReminder, 'registrationStep', 'confirmation');
-      resp.message(localeString.registrationConfirmation(usersDB[patientID]));
+      textedHelpers.updateUser(usersRef, patientID, 'nextReminder', nextReminder, 'registrationStep', 'complete');
+      resp.message(localeString.changedReminder(usersDB[patientID]));
     }
   }
 
-  else if(usersDB[patientID].registrationStep === "confirmation") {
-    if(fromMsg.toLowerCase() === "restart") {
-      resp.message(localeString.nameRegistration);
-      textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
-    }
-    else {
-      resp.message(localeString.registrationComplete(usersDB[patientID]));
-      textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'complete');
-    }
-  }
-}
 
-//Adherence Message
-else if(completedRegistration && (fromMsg === "1")){
-  textedHelpers.updateUser(adherenceRef, patientID, textedHelpers.dateString(0), fromMsg);
-  if(usersDB[patientID].numMissedDoses > 0) {
-    textedHelpers.updateUser(usersRef, patientID, 'numMissedDoses', 0, 'MISSED_DOSES_ALERT_MSG_FLAG', false);
-  }
-  if(fromMsg === "1") resp.message(localeString.takenMedication);
-}
+  // Respond with user's next reminder with any other message
+  else if (completedRegistration) resp.message(localeString.nextReminderMsg(usersDB[patientID]));
+  else res.message("Sorry, we did not understand that message. Please contact us at team@textedhealth.com for more information.");
+  textedHelpers.updateUser(usersRef, patientID, 'totalSent', usersDB[patientID].totalSent + 1);
 
-else if(completedRegistration && (fromMsg.toLowerCase() === "reminder")) {
-  textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'ChangeReminder');
-  resp.message(localeString.preferredTimeRegistration);
-}
-
-else if(usersDB[patientID].registrationStep == "ChangeReminder") {
-  var validTime = textedHelpers.checkValid(fromMsg, "time");
-  var validAMAppendTime = textedHelpers.checkValid(fromMsg + "am", "time");
-  if(!validTime && !validAMAppendTime) resp.message(localeString.invalidTime);
-  else {
-    if(!validTime) fromMsg = fromMsg + " am";  // assume AM reminder
-
-    if(fromMsg.indexOf(':') === -1) var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatNoColon);
-    else var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatColon);
-
-    var nextReminder = textedHelpers.dateMoment(1).hour(inputTimeMoment.hour()).minute(inputTimeMoment.minute()).format(textedHelpers.DBTimeFormat);
-
-    textedHelpers.updateUser(usersRef, patientID, 'nextReminder', nextReminder, 'registrationStep', 'complete');
-    resp.message(localeString.changedReminder(usersDB[patientID]);
-  }
-}
-
-
-// Respond with user's next reminder with any other message
-else if (completedRegistration) resp.message(localeString.nextReminderMsg(usersDB[patientID]));
-else res.message("Sorry, we did not understand that message. Please contact us at team@textedhealth.com for more information.");
-textedHelpers.updateUser(usersRef, patientID, 'totalSent', usersDB[patientID].totalSent + 1);
-
-res.writeHead(200, {
-  'Content-Type':'text/xml'
-});
-res.end(resp.toString());
+  res.writeHead(200, {
+    'Content-Type':'text/xml'
+  });
+  res.end(resp.toString());
 });
 
 
