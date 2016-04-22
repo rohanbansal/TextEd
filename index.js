@@ -98,7 +98,7 @@ app.post('/join', function(req, res) {
 //Receiving Text Message
 app.post('/message', function (req, res) {
 
-  //TODO implement no response counter - 3 and 24 hours
+    //TODO implement no response counter - 3 and 24 hours
   //TODO implement re-email if hanging registration
   //TODO help --> spanish
 
@@ -304,6 +304,7 @@ app.post('/message', function (req, res) {
   else res.message("Sorry, we did not understand that message. Please contact us at team@textedhealth.com for more information.");
   textedHelpers.updateUser(usersRef, patientID, 'totalSent', usersDB[patientID].totalSent + 1);
 
+  console.log("Sending: " + resp.toString());
   res.writeHead(200, {
     'Content-Type':'text/xml'
   });
