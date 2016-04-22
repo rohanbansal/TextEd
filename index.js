@@ -172,6 +172,24 @@ app.post('/message', function (req, res) {
     }
   }
 
+  else if(usersDB[patientID].registrationStep == "ChangeReminder") {
+    console.log("In changed reminder.");
+    var validTime = textedHelpers.checkValid(fromMsg, "time");
+    var validAMAppendTime = textedHelpers.checkValid(fromMsg + "am", "time");
+    if(!validTime && !validAMAppendTime) resp.message(localeString.invalidTime);
+    else {
+      if(!validTime) fromMsg = fromMsg + " am";  // assume AM reminder
+
+      if(fromMsg.indexOf(':') === -1) var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatNoColon);
+      else var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatColon);
+
+      var nextReminder = textedHelpers.dateMoment(1).hour(inputTimeMoment.hour()).minute(inputTimeMoment.minute()).format(textedHelpers.DBTimeFormat);
+
+      textedHelpers.updateUser(usersRef, patientID, 'nextReminder', nextReminder, 'registrationStep', 'complete');
+      resp.message(localeString.changedReminder(usersDB[patientID]));
+    }
+  }
+
   // Continue Registration
   else if(beganRegistration && !completedRegistration) {
 
@@ -281,23 +299,7 @@ app.post('/message', function (req, res) {
     resp.message(localeString.preferredTimeRegistration);
   }
 
-  else if(usersDB[patientID].registrationStep == "ChangeReminder") {
-    console.log("In changed reminder.");
-    var validTime = textedHelpers.checkValid(fromMsg, "time");
-    var validAMAppendTime = textedHelpers.checkValid(fromMsg + "am", "time");
-    if(!validTime && !validAMAppendTime) resp.message(localeString.invalidTime);
-    else {
-      if(!validTime) fromMsg = fromMsg + " am";  // assume AM reminder
 
-      if(fromMsg.indexOf(':') === -1) var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatNoColon);
-      else var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatColon);
-
-      var nextReminder = textedHelpers.dateMoment(1).hour(inputTimeMoment.hour()).minute(inputTimeMoment.minute()).format(textedHelpers.DBTimeFormat);
-
-      textedHelpers.updateUser(usersRef, patientID, 'nextReminder', nextReminder, 'registrationStep', 'complete');
-      resp.message(localeString.changedReminder(usersDB[patientID]));
-    }
-  }
 
 
   // Respond with user's next reminder with any other message
