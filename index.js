@@ -146,7 +146,7 @@ app.post('/message', function (req, res) {
   }
 
   //Restarting after unsubscribing
-  if(usersDB[patientID].registrationStep == "complete") {
+  else if(usersDB[patientID].registrationStep == "complete") {
     textedHelpers.updateUser(usersRef, patientID, "registrationStep", 'resubscribe');
     resp.message(localeString.initialResubscribeMsg(usersDB[patientID]));
   }
