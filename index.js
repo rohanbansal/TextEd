@@ -98,7 +98,7 @@ app.post('/join', function(req, res) {
 //Receiving Text Message
 app.post('/message', function (req, res) {
 
-    //TODO implement no response counter - 3 and 24 hours
+  //TODO implement no response counter - 3 and 24 hours
   //TODO implement re-email if hanging registration
   //TODO help --> spanish
 
@@ -282,6 +282,7 @@ app.post('/message', function (req, res) {
   }
 
   else if(usersDB[patientID].registrationStep == "ChangeReminder") {
+    console.log("In changed reminder.");
     var validTime = textedHelpers.checkValid(fromMsg, "time");
     var validAMAppendTime = textedHelpers.checkValid(fromMsg + "am", "time");
     if(!validTime && !validAMAppendTime) resp.message(localeString.invalidTime);
