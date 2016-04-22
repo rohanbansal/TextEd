@@ -349,7 +349,6 @@ var adherenceJob = new cronJob( '1 4 * * *', function() { //FIXME date/time issu
 
 //Run Cronjob every minute to send reminders that are due
 var textJob = new cronJob( '* * * * *', function() {
-
   for (var patientID in usersDB) {
     //Has their reminder time passed? If not, then don't send a message.
     var reminderTime = moment(usersDB[patientID].nextReminder, textedHelpers.DBTimeFormat);
@@ -381,7 +380,7 @@ var textJob = new cronJob( '* * * * *', function() {
     //Update reminder to next day, and increment totalSent
     reminderTime.add(1, 'days');
     textedHelpers.updateUser(usersRef, patientID, 'nextReminder', reminderTime.format(textedHelpers.DBTimeFormat), 'totalSent', usersDB[patientID].totalSent + 1);
-
+    console.log("Sending message to " + patientID + " saying ---" + resp + "---");
     //Send Message
     client.sendMessage({
       to: patientID,
