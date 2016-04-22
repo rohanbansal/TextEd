@@ -8,8 +8,6 @@ var moment = require('moment');
 var textedStrings = require('./textedStrings');
 var validator = require('validator');
 
-
-
 var displayTimeFormat = "MMM DD, hh:mm a";
 var DBTimeFormat = "hh:mm a, MMM DD, YYYY";
 var inputTimeFormatColon = 'h:mm a';
@@ -23,7 +21,6 @@ exports.inputTimeFormatColon = inputTimeFormatColon;
 exports.inputTimeFormatNoColon = inputTimeFormatNoColon;
 exports.registrationSkipTxt = registrationSkipTxt;
 exports.missedDoseAlertMsgDays = missedDoseAlertMsgDays;
-
 exports.defaultReminderTime = "08:00 am";
 
 /**
@@ -68,7 +65,7 @@ exports.createNewUser = function(database, userID) {
 */
 exports.checkValid = function(input, type) {
   if(type === "name") return validator.isLength(input, {min:1, max:22});
-  else if(type === "age") return validator.isInt(input, {min:18, max:150}); //TODO Is 18 allowed?
+  else if(type === "age") return validator.isInt(input, {min:1, max:150}); //TODO Is 18 allowed?
   else if(type === "gender") return validator.isIn(input, ['M', 'F', 'm', 'f', 'O', 'o']);
   else if(type === "zipcode") return (validator.isLength(input, {min:5, max:5}) && validator.isNumeric(input));
   else if(type === "time") return (validator.matches(input, /^(0?[1-9]|1[0-2]):?[0-5][0-9]\s*[ap]m$/i));
@@ -96,5 +93,4 @@ exports.nextReminderString = function(user) {
 exports.prodEnvironment = function() {
   if(process.env.ENVIRONMENT_TYPE === "PRODUCTION" ) return true;
   else return false;
-
 }
