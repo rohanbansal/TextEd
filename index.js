@@ -316,7 +316,7 @@ app.post('/message', function (req, res) {
 
 
 //Check daily to see if people responded today to adherence database @ 12:01AM
-var adherenceJob = new cronJob( '1 4 * * *', function() { //FIXME date/time issue
+var adherenceJob = new cronJob( '* * * * *', function() { //FIXME date/time issue
   adherenceRef.once("value", function(snapshot) {
     console.log("Checking Adherence patterns: ");
     var adherenceDB = snapshot.val();
@@ -324,13 +324,16 @@ var adherenceJob = new cronJob( '1 4 * * *', function() { //FIXME date/time issu
     for(var patientID in adherenceDB) {
       //If patient responded yesterday, reset adherence measures
       if(adherenceDB[patientID][textedHelpers.dateString(-1)] == '1') {
+        console.log("Took meds yesterday.");
         textedHelpers.updateUser(usersRef, patientID, 'missedDoseCounter', 0, 'MISSED_DOSES_ALERT_MSG_FLAG', false);
         continue;
       }
 
       //Check to see if a missed dose flag message needs to be sent.
       else {
+        console.log(patientID + " Didn't take meds yesterday");
         var maxMissed = textedHelpers.missedDoseAlertMsgDays[textedHelpers.missedDoseAlertMsgDays.length -1];
+        console.log("Max missed is: " + maxMissed);
         if (textedHelpers.missedDoseAlertMsgDays.indexOf(usersDB[patientID].missedDoseCounter) != -1) { //Send out message on day 3 of missed dose
           if(usersDB[patientID].missedDoseCounter == maxMissed) {
             textedHelpers.updateUser(usersRef, patientID, 'FINAL_MISSED_DOSE_ALERT_MSG_FLAG', true);
