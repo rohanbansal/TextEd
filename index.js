@@ -316,7 +316,7 @@ app.post('/message', function (req, res) {
 
 
 //Check daily to see if people responded today to adherence database @ 12:01AM
-var adherenceJob = new cronJob( '* * * * *', function() { //FIXME date/time issue
+var adherenceJob = new cronJob( '1 4 * * *', function() { //FIXME date/time issue
   adherenceRef.once("value", function(snapshot) {
     console.log("Checking Adherence patterns: ");
     var adherenceDB = snapshot.val();
