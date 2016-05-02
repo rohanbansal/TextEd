@@ -29,7 +29,7 @@ var twilio = require('twilio');
 var client = twilio(accountSid, authToken);
 
 //List of all numbers owned on Twilio
-if(textedHelpers.prodEnvironment()) var fromNumbers = ["+16097791160", "+16097791160"];
+if(textedHelpers.prodEnvironment()) var fromNumbers = ["+13473292329", "+13473292329"];
 else var fromNumbers = ["+17183952719", "+17183952719"];
 
 //Firebase Database Access
