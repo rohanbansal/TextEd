@@ -102,11 +102,17 @@ app.post('/message', function (req, res) {
   //TODO implement re-email if hanging registration
   //TODO help --> spanish
 
+  console.log('Joining Now.');
+
   var resp = new twilio.TwimlResponse();
   var fromMsg = req.body.Body.trim();
   var patientID = req.body.From;
   var twilioNum = req.body.To;
   var localeString = textedStrings.en;
+
+  if (twilioNum == '1' || twilioNum == '2') var studyParticipant = true;
+  else var studyParticipant = true;
+  if (studyParticipant) localeString = textedStrings.study;
 
   var beganRegistration = (usersDB[patientID] != null); //User at least began registration
 
@@ -119,8 +125,12 @@ app.post('/message', function (req, res) {
 
   //New User - never began registration
   if(!beganRegistration) {
+    console.log("Beginning Registration.");
     textedHelpers.createNewUser(usersRef, patientID);
     textedHelpers.updateUser(usersRef, patientID, 'associatedTwilioNum', twilioNum);
+    if(studyParticipant) {
+      textedHelpers.updateUser(usersRef, patientID, 'studyParticipant', true);
+    }
     resp.message(localeString.newUser);
   }
 
@@ -201,6 +211,12 @@ app.post('/message', function (req, res) {
         resp.message(localeString.newUser);
         textedHelpers.updateUser(usersRef, patientID, 'preferredLanguage', 'es');
       }
+
+      else if(studyParticipant) {
+        textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'time');
+        resp.message(localeString.preferredTimeRegistration);
+      }
+
       else { //begin registration process with name
         resp.message(localeString.nameRegistration);
         textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
@@ -209,6 +225,8 @@ app.post('/message', function (req, res) {
 
     //Register Name
     else if(usersDB[patientID].registrationStep === "name") {
+
+
       var msg = fromMsg;
       var validName = textedHelpers.checkValid(fromMsg, "name");
       if(!validName) resp.message(localeString.invalidName);
@@ -216,6 +234,8 @@ app.post('/message', function (req, res) {
         textedHelpers.updateUser(usersRef, patientID, 'name', msg, 'registrationStep', 'age');
         resp.message(localeString.ageRegistration(usersDB[patientID]));
       }
+
+
     }
 
     //Register Age
@@ -266,7 +286,7 @@ app.post('/message', function (req, res) {
         if(fromMsg.indexOf(':') === -1) var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatNoColon);
         else var inputTimeMoment = moment(fromMsg, textedHelpers.inputTimeFormatColon);
 
-        var nextReminder = textedHelpers.dateMoment(0).hour(inputTimeMoment.hour()).minute(inputTimeMoment.minute()).format(textedHelpers.DBTimeFormat);
+        var nextReminder = textedHelpers.dateMoment(1).hour(inputTimeMoment.hour()).minute(inputTimeMoment.minute()).format(textedHelpers.DBTimeFormat);
 
         textedHelpers.updateUser(usersRef, patientID, 'nextReminder', nextReminder, 'registrationStep', 'confirmation');
         resp.message(localeString.registrationConfirmation(usersDB[patientID]));
@@ -278,6 +298,7 @@ app.post('/message', function (req, res) {
         resp.message(localeString.nameRegistration);
         textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'name');
       }
+
       else {
         resp.message(localeString.registrationComplete(usersDB[patientID]));
         textedHelpers.updateUser(usersRef, patientID, 'registrationStep', 'complete');
@@ -291,7 +312,7 @@ app.post('/message', function (req, res) {
     if(usersDB[patientID].numMissedDoses > 0) {
       textedHelpers.updateUser(usersRef, patientID, 'numMissedDoses', 0, 'MISSED_DOSES_ALERT_MSG_FLAG', false);
     }
-    if(fromMsg === "1") resp.message(localeString.takenMedication);
+    if(fromMsg === "1") resp.message(localeString.takenMedication());
   }
 
   else if(completedRegistration && (fromMsg.toLowerCase() === "reminder")) {
@@ -365,6 +386,7 @@ var textJob = new cronJob( '* * * * *', function() {
     usersDB[patientID].donotsend) continue;  //patient does not message
 
     if(usersDB[patientID].preferredLanguage === "es") localeString = textedStrings.es;
+    else if(usersDB[patientID].studyParticipant) localeString = textedStrings.study;
     else localeString = textedStrings.en;
 
     var resp = "";

@@ -7,6 +7,103 @@
 var moment = require('moment');
 var textedHelpers = require('./textedHelpers');
 
+/** @constant English object containing all phrases. */
+var study = {
+  newUser: "Welcome to TextEd, your medication reminder service. Standard fees may apply. To begin reply with START. Reply ASSIST for help, or HALT to cancel.", //FIXME add text to change language once implemented
+  nameRegistration: "Thank you for choosing TextEd. Together, we can stay healthy. Let’s get to know each other. What is your first name?",
+  genderRegistration: "Great, almost done! What is your gender identity?  Respond M for male, F for female, or O for other.",
+  zipcodeRegistration: "We would like to know what health services are in your area. Could you send us your 5-digit zip code so that we can find out? For example: 10010",
+  preferredTimeRegistration: "Let’s set up your medication reminder time. Please enter the time you would like a receive text reminder. For example, reply 900 AM or 1015 PM.",
+  invalidName: "It looks like an error has ocurred. Try entering your name again - up to 20 letters long.",
+  invalidAge: "It looks like an error has occurred. If you do not want to enter your age, reply SKIP. Otherwise, try entering your age again as a number like this: 33",
+  invalidGender: "It looks like an error has occurred. If you do not want to enter your gender, reply SKIP. Otherwise, try entering your gender again as M, F, or O.",
+  invalidZipcode: "Oops, there was an error. If you do not want to enter your zip code, reply SKIP. Otherwise, try entering your zip code again as just 5 numbers like this: 10010",
+  invalidTime: "It looks like an error has occurred. Reply with the time you would like your medication reminder like this: 1130 AM or 215 PM.",
+  helpMeMsg: "For emergencies call 911. For medical questions, contact your doctor. To change your reminder time, reply REMINDER. To stop TextEd, reply HALT. To contact TextEd, email team@textedhealth.com.", //FIXME Add language selection
+  noRegistrationResponse: "TextEd is your partner in taking care of your health. Would you still like our help? If so, please reply back with START. If not, respond HALT.", //FIXME Add no registration functionality
+  unsubscribeMsg: "We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please reply BEGIN."
+};
+
+study.takenMedication = function() {
+  var resp1 = "Congratulations!  Keep taking your medication.";
+  var resp2 = "Great work! Enjoy the rest of your day and we will see you tomorrow.";
+  var resp3 = "It’s hard to remember to take your medicine, but you are doing a great job. Keep it up!";
+  var resp4 = "Good job. We will send you another reminder tomorrow.";
+  var resp5 = "Keep up the good work! ";
+  var resp6 = "You are doing great! ";
+  var resp7 = "It’s hard to remember to take your medicine, and we appreciate your hard work!";
+  var resp8 = "Way to take control of your health!";
+  var resp9 = "Awesome! You're making a difference.";
+  var resp10 = "Well done. Enjoy the rest of your day!";
+  var responses = [resp1, resp2, resp3, resp4, resp5, resp6, resp7, resp8, resp9, resp10];
+
+  var randnum = Math.floor(Math.random()*responses.length);
+
+  return responses[randnum];
+}
+
+study.reminderMsg = function(user) { //What they receive daily
+  var resp1 = "Hello! Please remember to take your medication today. Reply with 1 after you have taken your medication.";
+  var resp2 = "This is your daily medication reminder. Please reply \"1\" after you’ve taken your medication as prescribed.";
+  var resp3 = "Did you remember to take your medication today? If not, here is your reminder! Reply \“1\” after you’ve taken your medication.";
+  var responses = [resp1, resp2, resp3];
+
+  var randnum = Math.floor(Math.random()*responses.length);
+
+  return responses[randnum];
+}
+
+study.ageRegistration = function(user) {
+  var resp = "Hello! How old are you? Please respond with a number (like 23 or 67).";
+  return resp;
+}
+
+study.initialResubscribeMsg = function(user) {
+  var resp = "Hello, and welcome back! Would you like to review your account details? Reply YES or NO.";
+  return resp;
+}
+
+study.noConfirmResubscribe = function(user) {
+  var resp = "Great! We are glad to have you back. Your next reminder is: " + textedHelpers.nextReminderString(user);
+  return resp;
+}
+
+study.registrationComplete = function(user) {
+  var resp = "Great! If you need help at any time, text ASSIST for more info. Your next reminder is: " + textedHelpers.nextReminderString(user);
+  return resp;
+}
+
+study.nextReminderMsg = function(user) { //What user receives if they send a unsolicited text
+  var resp = "Hello! Your next reminder is: " + textedHelpers.nextReminderString(user) + ".  Please reply ASSIST for help.";
+  return resp;
+}
+
+
+
+study.registrationConfirmation = function(user) {
+  var resp = "This is a test reminder. You will get one text every day to remind you to take your medicine. Remember to take your medicine as prescribed. Reply '1' to begin."
+
+  return resp;
+}
+
+study.missedDosesAlertMsg = function(user) {  //FIXME Change text.  Create mechanic to not use "1".
+  var resp = "Hello, we haven't heard from you in a few days, and we are checking in. Reply 1 if everything is okay. If you need help, contact your doctor.";
+  return resp;
+}
+
+
+study.finalMissedDoseAlertMsg = function(user) {
+  var resp = "Hello, we haven't heard from you in a long time.  If you'd like to continue receiving messages, reply 1.  If you need help, contact your doctor.";
+  return resp;
+}
+
+study.changedReminder = function(user) { //What user receives if they send a unsolicited text
+  var resp = "Thanks! Your next reminder is now: " + textedHelpers.nextReminderString(user) + ".";
+  return resp;
+}
+
+
+
 
 /** @constant English object containing all phrases. */
 var en = {
@@ -20,11 +117,15 @@ var en = {
   invalidGender: "It looks like an error has occurred. If you do not want to enter your gender, reply SKIP. Otherwise, try entering your gender again as M, F, or O.",
   invalidZipcode: "Oops, there was an error. If you do not want to enter your zip code, reply SKIP. Otherwise, try entering your zip code again as just 5 numbers like this: 10010",
   invalidTime: "It looks like an error has occurred. Reply with the time you would like your medication reminder like this: 1130 AM or 215 PM.",
-  takenMedication: "Congratulations!  Keep taking your medication.", //FIXME remove this, and incorporate into next days
   helpMeMsg: "For emergencies call 911. For medical questions, contact your doctor. To change your reminder time, reply REMINDER. To stop TextEd, reply HALT. To contact TextEd, email team@textedhealth.com.", //FIXME Add language selection
   noRegistrationResponse: "TextEd is your partner in taking care of your health. Would you still like our help? If so, please reply back with START. If not, respond HALT.", //FIXME Add no registration functionality
   unsubscribeMsg: "We're sorry to see you go!  If you'd like to start receiving TextEd reminders again, please reply BEGIN."
 };
+
+en.takenMedication = function() {
+  var resp = "Congratulations!  Keep taking your medication.";
+  return resp;
+}
 
 en.ageRegistration = function(user) {
   var resp = "Hello  " + user.name + "! How old are you? Please respond with a number (like 23 or 67).";
@@ -104,3 +205,4 @@ es.reminderMsg = function(user) { return ("Esp: Hello " + user.name + " - please
 
 exports.en = en;
 exports.es = es;
+exports.study = study;

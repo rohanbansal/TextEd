@@ -13,7 +13,7 @@ var DBTimeFormat = "hh:mm a, MMM DD, YYYY";
 var inputTimeFormatColon = 'h:mm a';
 var inputTimeFormatNoColon = 'hmm a';
 var registrationSkipTxt = "skip";
-var missedDoseAlertMsgDays = [2, 6, 29, 59];
+var missedDoseAlertMsgDays = [2, 6, 29, 364];
 
 exports.displayTimeFormat = displayTimeFormat;
 exports.DBTimeFormat = DBTimeFormat;
@@ -55,7 +55,8 @@ exports.createNewUser = function(database, userID) {
     donotsend: false,
     registrationStep: "start", //[start, name, age, gender, zipcode, time, complete]
     preferredLanguage: "en",
-    associatedTwilioNum: null
+    associatedTwilioNum: null,
+    studyParticipant: false
   });
 }
 
